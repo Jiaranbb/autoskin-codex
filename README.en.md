@@ -14,6 +14,10 @@ It keeps source images as ordinary files, separates official Codex appearance va
 styling, and previews fullscreen home, Banner, and new-chat surfaces independently before touching
 the live app. The repository includes a complete **Chiikawa Summer Pool** worked example.
 
+This is the only bundled editable example. The upstream Aurora Veil and Ember Bloom demo themes are
+not redistributed. The safe runtime, generator, previewer, and installer remain complete; cloned or
+newly generated themes are installed into durable `themes-private/` storage.
+
 ## Preview
 
 ![Installed Chiikawa Summer Pool theme](docs/images/chiikawa-summer-preview.jpg)

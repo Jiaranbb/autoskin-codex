@@ -8,8 +8,13 @@ installation reversible.
 
 The upstream engine is MIT-licensed. Retain its copyright and license whenever engine files are
 copied or modified. This skill includes the adapted runtime under `scripts/`,
-`assets/renderer-inject.js`, `styles/dream/`, and `themes/`; its retained license is
+`assets/renderer-inject.js`, and `styles/dream/`; its retained license is
 `references/upstream-runtime-LICENSE.txt`.
+
+The public package does not redistribute the upstream demo themes. Its runtime `themes/` directory
+is intentionally empty, and user-selected themes are installed under durable `themes-private/`
+storage. The only bundled worked example is `examples/chiikawa-summer/`, governed by its separate
+asset notice below.
 
 This skill replaces the upstream authoring contract with:
 

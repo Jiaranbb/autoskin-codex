@@ -137,7 +137,7 @@ dream_cdp_ready() {
   local port="$1" host payload
   for host in "127.0.0.1" "[::1]"; do
     payload="$(curl --globoff -fsS --max-time 2 "http://$host:$port/json/list" 2>/dev/null || true)"
-    if printf '%s' "$payload" | grep -Eq '"url"[[:space:]]*:[[:space:]]*"app://-/index\.html'; then
+    if grep -Eq '"url"[[:space:]]*:[[:space:]]*"app://-/index\.html' <<<"$payload"; then
       return 0
     fi
   done

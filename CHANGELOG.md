@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Keep Chiikawa Summer Pool as the only bundled editable theme example.
+- Remove the upstream Aurora Veil and Ember Bloom demo themes from the public package.
+- Allow runtime installation to finish cleanly before a private theme has been installed.
+- Detect renderer-level skin loss after a desktop app update and automatically reinject the theme.
+
 ## 0.1.0 - 2026-08-11
 
 - Publish the rewritten schema-v2 authoring and preview workflow.

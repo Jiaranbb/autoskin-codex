@@ -11,6 +11,9 @@ fail() {
   exit 1
 }
 
+POOL_ART="$ROOT/examples/chiikawa-summer/assets/pool-background.png"
+[ -f "$POOL_ART" ] || fail "bundled Chiikawa example art is missing"
+
 echo "Checking shell and JavaScript syntax..."
 while IFS= read -r script; do
   /bin/bash -n "$script"
@@ -39,16 +42,11 @@ done < <(find "$ROOT/scripts" -type f -name '*.mjs' -print | sort)
   if (unsafe.length) throw new Error(`brace shell variables before non-ASCII text:\n${unsafe.join("\n")}`);
 ' "$ROOT"
 
-echo "Checking theme discovery..."
-THEME_REPORT="$TMP_ROOT/themes.json"
-"$NODE_BIN" "$ROOT/scripts/injector.mjs" --themes >"$THEME_REPORT"
-"$NODE_BIN" -e '
-  const report = require(process.argv[1]);
-  if (report.defaultTheme !== "aurora-veil") throw new Error("unexpected default theme");
-  for (const name of ["aurora-veil", "ember-bloom"]) {
-    if (!report.themes.some((theme) => theme.name === name)) throw new Error(`missing ${name}`);
-  }
-' "$THEME_REPORT"
+echo "Checking that the public runtime has no bundled fallback themes..."
+if "$NODE_BIN" "$ROOT/scripts/injector.mjs" --themes >"$TMP_ROOT/themes.json" 2>"$TMP_ROOT/themes.error"; then
+  fail "public runtime unexpectedly discovered a bundled fallback theme"
+fi
+grep -q "No valid themes found" "$TMP_ROOT/themes.error" || fail "empty-theme error was not explicit"
 
 echo "Checking appearance backup/restore without bootstrap color changes..."
 CONFIG_PATH="$TMP_ROOT/config.toml"
@@ -85,11 +83,14 @@ done
 [ -x "$RUNTIME_ROOT/scripts/autoskin-macos.sh" ] || fail "runtime scripts lost executable permissions"
 "$NODE_BIN" "$ROOT/scripts/sync-macos-runtime.mjs" \
   --source "$ROOT" --destination "$RUNTIME_ROOT" >/dev/null
-"$NODE_BIN" "$RUNTIME_ROOT/scripts/injector.mjs" --themes >/dev/null
+if "$NODE_BIN" "$RUNTIME_ROOT/scripts/injector.mjs" --themes >"$TMP_ROOT/runtime-empty.json" 2>"$TMP_ROOT/runtime-empty.error"; then
+  fail "runtime synchronization unexpectedly added a fallback theme"
+fi
+grep -q "No valid themes found" "$TMP_ROOT/runtime-empty.error" || fail "synchronized runtime did not report an empty theme set"
 
 echo "Checking one-image theme generation..."
 "$NODE_BIN" "$ROOT/scripts/generate-quick-theme-macos.mjs" \
-  --image "$ROOT/themes/ember-bloom/art.png" \
+  --image "$POOL_ART" \
   --name ci-quick-theme \
   --themes-root "$RUNTIME_ROOT/themes-private" \
   --reserved-root "$RUNTIME_ROOT/themes" >"$TMP_ROOT/quick-theme-result.json"
@@ -102,7 +103,7 @@ echo "Checking one-image theme generation..."
   if (Object.keys(manifest.tokens).length !== 28) throw new Error("generated theme must contain 28 tokens");
 ' "$TMP_ROOT/quick-theme-result.json" "$TMP_ROOT/themes-private/ci-quick-theme/theme.json"
 "$NODE_BIN" "$ROOT/scripts/generate-quick-theme-macos.mjs" \
-  --image "$ROOT/themes/ember-bloom/art.png" \
+  --image "$POOL_ART" \
   --name ci-quick-theme \
   --themes-root "$RUNTIME_ROOT/themes-private" \
   --reserved-root "$RUNTIME_ROOT/themes" >/dev/null
@@ -116,16 +117,18 @@ echo "Checking one-image theme generation..."
     throw new Error("generated private theme was not discovered");
   }
 ' "$TMP_ROOT/runtime-themes.json"
+mkdir -p "$RUNTIME_ROOT/themes/reserved-theme"
+printf '{}\n' >"$RUNTIME_ROOT/themes/reserved-theme/theme.json"
 if "$NODE_BIN" "$ROOT/scripts/generate-quick-theme-macos.mjs" \
-  --image "$ROOT/themes/ember-bloom/art.png" \
-  --name aurora-veil \
+  --image "$POOL_ART" \
+  --name reserved-theme \
   --themes-root "$RUNTIME_ROOT/themes-private" \
   --reserved-root "$RUNTIME_ROOT/themes" >/dev/null 2>&1; then
-  fail "quick-theme overwrote a built-in theme"
+  fail "quick-theme overwrote a reserved runtime theme"
 fi
-/usr/bin/sips -s format jpeg "$ROOT/themes/aurora-veil/art.png" --out "$TMP_ROOT/夜空.jpg" >/dev/null
+/usr/bin/sips -s format jpeg "$POOL_ART" --out "$TMP_ROOT/泳池.jpg" >/dev/null
 "$NODE_BIN" "$ROOT/scripts/generate-quick-theme-macos.mjs" \
-  --image "$TMP_ROOT/夜空.jpg" \
+  --image "$TMP_ROOT/泳池.jpg" \
   --themes-root "$RUNTIME_ROOT/themes-private" \
   --reserved-root "$RUNTIME_ROOT/themes" >"$TMP_ROOT/auto-name-result.json"
 "$NODE_BIN" -e '
@@ -133,12 +136,12 @@ fi
   const result = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
   const manifest = JSON.parse(fs.readFileSync(`${result.themeDirectory}/theme.json`, "utf8"));
   if (!/^my-theme-[a-f0-9]{6}$/.test(result.name)) throw new Error("non-Latin filename fallback is invalid");
-  if (manifest.art.home !== "art.jpg" || result.route !== "dark") throw new Error("JPG dark-route generation failed");
+  if (manifest.art.home !== "art.jpg" || result.route !== "light") throw new Error("JPG light-route generation failed");
 ' "$TMP_ROOT/auto-name-result.json"
 mkdir -p "$TMP_ROOT/themes-private/manual-theme"
 printf '{}\n' >"$TMP_ROOT/themes-private/manual-theme/theme.json"
 if "$NODE_BIN" "$ROOT/scripts/generate-quick-theme-macos.mjs" \
-  --image "$ROOT/themes/ember-bloom/art.png" \
+  --image "$POOL_ART" \
   --name manual-theme \
   --themes-root "$RUNTIME_ROOT/themes-private" \
   --reserved-root "$RUNTIME_ROOT/themes" >/dev/null 2>&1; then
@@ -190,13 +193,16 @@ INSTALLED_ROOT="$TEST_HOME/Library/Application Support/CodexDreamSkin"
 [ -x "$INSTALLED_ROOT/runtime/scripts/autoskin-macos.sh" ] || fail "unified installer did not create a stable runtime"
 [ -f "$INSTALLED_ROOT/config.before-dream-skin.toml" ] || fail "unified installer did not back up base colors"
 [ ! -e "$TEST_HOME/Library/LaunchAgents/com.codex-autoskin.watcher.plist" ] || fail "--no-auto-recover installed a LaunchAgent"
+HOME="$TEST_HOME" bash "$ROOT/scripts/autoskin-macos.sh" install \
+  --no-auto-recover --port 19337 --app "$FAKE_APP" --node "$NODE_BIN" >"$TMP_ROOT/empty-install.log"
+grep -q "no theme is installed yet" "$TMP_ROOT/empty-install.log" || fail "empty runtime install did not stop with guidance"
 HOME="$TEST_HOME" /bin/bash -c '
   set -euo pipefail
   . "$1/runtime/scripts/lib/mac-common.sh"
   [ "$(dream_installed_port)" = "19337" ]
 ' test "$INSTALLED_ROOT"
 HOME="$TEST_HOME" "$INSTALLED_ROOT/runtime/scripts/autoskin-macos.sh" quick-theme \
-  "$ROOT/themes/aurora-veil/art.png" --name installed-quick-theme --no-apply --node "$NODE_BIN" >/dev/null
+  "$POOL_ART" --name installed-quick-theme --no-apply --node "$NODE_BIN" >/dev/null
 [ -f "$INSTALLED_ROOT/themes-private/installed-quick-theme/theme.json" ] || fail "installed quick-theme did not persist its theme"
 "$NODE_BIN" "$INSTALLED_ROOT/runtime/scripts/injector.mjs" --themes >"$TMP_ROOT/installed-themes.json"
 "$NODE_BIN" -e '

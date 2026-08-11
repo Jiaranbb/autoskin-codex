@@ -86,7 +86,9 @@ write_log "Watcher started (PID $$, port $PORT)."
 injector_healthy() {
   local pid
   pid="$(dream_read_json_number "$STATE_PATH" injectorPid 2>/dev/null || true)"
-  [ -n "$pid" ] && dream_pid_matches "$pid" "$SCRIPT_DIR/injector.mjs"
+  [ -n "$pid" ] &&
+    dream_pid_matches "$pid" "$SCRIPT_DIR/injector.mjs" &&
+    "$NODE_BIN" "$SCRIPT_DIR/injector.mjs" --verify --port "$PORT" >/dev/null 2>&1
 }
 
 run_start() {

@@ -93,8 +93,9 @@ Build themes from semantic data and ordinary asset files. Attribute the runtime 
 - `scripts/*.ps1`: Windows runtime installation, launch, verification, watch, and restoration.
 - `scripts/adopt-runtime-macos.py`: migrate an existing runtime to this skill without changing the
   selected theme or official color configuration.
-- `assets/renderer-inject.js`, `styles/dream/`, and `themes/`: attributed safe runtime resources
-  and fallback themes.
+- `assets/renderer-inject.js`, `styles/dream/`, and `themes/`: attributed safe runtime resources.
+  The public package intentionally ships no upstream fallback themes; install the worked example or
+  a generated theme into durable `themes-private/` storage before starting the runtime.
 - `assets/previewer/`: deterministic browser preview shell; never embed source images.
 - `assets/theme-template/theme.json`: starter manifest copied by the initializer.
 - `examples/chiikawa-summer/`: complete default theme and ordinary image assets.

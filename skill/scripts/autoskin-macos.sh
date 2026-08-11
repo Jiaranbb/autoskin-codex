@@ -75,6 +75,12 @@ case "$COMMAND" in
       exit 0
     fi
 
+    if ! "$NODE_BIN" "$(dream_state_root)/runtime/scripts/injector.mjs" --themes >/dev/null 2>&1; then
+      echo "AutoSkin runtime is installed, but no theme is installed yet."
+      echo "Clone or create a theme, install it into themes-private, then run '$INSTALLED_SCRIPT start'."
+      exit 0
+    fi
+
     if ! dream_cdp_ready "$PORT" && [ -n "$(dream_main_pids)" ] && [ "$RESTART_EXISTING" -ne 1 ]; then
       if [ -t 0 ]; then
         printf '\nCodex is currently open. Restart it now to enable AutoSkin? [y/N] '
