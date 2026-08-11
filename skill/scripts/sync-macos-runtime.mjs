@@ -42,6 +42,7 @@ const RUNTIME_ENTRIES = [
   "styles/dream",
   "themes",
 ];
+const EXECUTABLE_RUNTIME_FILES = RUNTIME_ENTRIES.filter((entry) => entry.endsWith(".sh"));
 const options = parseArgs(process.argv.slice(2));
 
 if (options.source === options.destination) {
@@ -74,6 +75,12 @@ try {
       recursive: stat.isDirectory(),
       preserveTimestamps: true,
     });
+  }
+  // GitHub's archive installer does not preserve executable bits. Normalize
+  // every runtime shell entry explicitly so a downloaded Skill behaves like a
+  // git clone after the first bootstrap.
+  for (const entry of EXECUTABLE_RUNTIME_FILES) {
+    await fs.chmod(path.join(next, entry), 0o755);
   }
   const sourcePrivateThemes = path.join(options.source, "themes-private");
   const sourcePrivateStat = await fs.stat(sourcePrivateThemes).catch(() => null);

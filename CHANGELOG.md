@@ -10,3 +10,4 @@
 - Add the bundled Chiikawa Summer Pool non-commercial Fan Art example.
 - Keep runtime bootstrap neutral so it no longer imposes starter pink/purple colors.
 - Make Hero/card copy and schema decorations consistent between preview and installed runtime.
+- Normalize macOS runtime executable permissions after GitHub archive-based Skill installation.

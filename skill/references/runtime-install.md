@@ -44,8 +44,8 @@ The safe renderer runtime is bundled in this skill. Do not require the older
 On macOS:
 
 ```bash
-scripts/autoskin-macos.sh doctor
-scripts/autoskin-macos.sh install --no-start
+bash scripts/autoskin-macos.sh doctor
+bash scripts/autoskin-macos.sh install --no-start
 ```
 
 The installer resolves the Node.js executable bundled with the official app when possible.
@@ -88,7 +88,7 @@ Perform steps in order:
 
 Keep the implemented actions distinct:
 
-- `scripts/autoskin-macos.sh install`: install or refresh the runtime; it only backs up the current
+- `bash scripts/autoskin-macos.sh install`: install or refresh the runtime; it only backs up the current
   official appearance and does not impose starter colors.
 - `python3 scripts/install_theme.py <theme> --apply`: validate, build, snapshot, atomically install,
   apply official `nativeTheme` values, select the theme, and verify. Failure restores the prior

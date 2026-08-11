@@ -240,10 +240,10 @@ python3 scripts/theme_tool.py package /absolute/path/my-theme \
 macOS 应用前先检查运行时：
 
 ```bash
-scripts/autoskin-macos.sh doctor
-scripts/autoskin-macos.sh install --no-start
+bash scripts/autoskin-macos.sh doctor
+bash scripts/autoskin-macos.sh install --no-start
 python3 scripts/install_theme.py /absolute/path/my-theme --apply
-scripts/autoskin-macos.sh verify
+bash scripts/autoskin-macos.sh verify
 ```
 
 完整 schema、预览验收和运行时说明见：
@@ -313,8 +313,8 @@ macOS 可以构建可选的原生 Swift 菜单栏控制器，用来查看状态�
 
 **怎样暂停皮肤或彻底恢复官方界面？**
 
-`scripts/autoskin-macos.sh restore` 会移除当前实时注入，但保留已安装运行时；如需彻底卸载
-运行时并恢复安装前的官方配色，再执行 `scripts/autoskin-macos.sh uninstall --yes`。卸载前应
+`bash scripts/autoskin-macos.sh restore` 会移除当前实时注入，但保留已安装运行时；如需彻底卸载
+运行时并恢复安装前的官方配色，再执行 `bash scripts/autoskin-macos.sh uninstall --yes`。卸载前应
 确认私人主题是否需要另行保留。
 
 **可以把自己的图片放进去吗？**

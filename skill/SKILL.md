@@ -45,7 +45,7 @@ Build themes from semantic data and ordinary asset files. Attribute the runtime 
 7. On the first macOS install, prepare the bundled safe runtime:
 
    ```bash
-   scripts/autoskin-macos.sh install --no-start
+   bash scripts/autoskin-macos.sh install --no-start
    ```
 
    The official app's bundled Node.js is used when available; Homebrew and SwiftBar are not
@@ -60,11 +60,11 @@ Build themes from semantic data and ordinary asset files. Attribute the runtime 
 9. Use the installed runtime for lifecycle actions:
 
    ```bash
-   scripts/autoskin-macos.sh status
-   scripts/autoskin-macos.sh theme <theme-id> fullscreen
-   scripts/autoskin-macos.sh pause
-   scripts/autoskin-macos.sh resume
-   scripts/autoskin-macos.sh verify
+   bash scripts/autoskin-macos.sh status
+   bash scripts/autoskin-macos.sh theme <theme-id> fullscreen
+   bash scripts/autoskin-macos.sh pause
+   bash scripts/autoskin-macos.sh resume
+   bash scripts/autoskin-macos.sh verify
    ```
 
 ## Rules

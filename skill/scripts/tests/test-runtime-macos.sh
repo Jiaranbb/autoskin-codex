@@ -184,7 +184,7 @@ HOME="$TEST_HOME" /bin/bash -c '
 echo "Checking isolated one-command installation..."
 mkdir -p "$TEST_HOME/.codex"
 printf '%s\n' '[desktop]' 'appearanceTheme = "dark"' >"$TEST_HOME/.codex/config.toml"
-HOME="$TEST_HOME" "$ROOT/scripts/autoskin-macos.sh" install \
+HOME="$TEST_HOME" bash "$ROOT/scripts/autoskin-macos.sh" install \
   --no-start --no-auto-recover --port 19337 --app "$FAKE_APP" --node "$NODE_BIN" >/dev/null
 INSTALLED_ROOT="$TEST_HOME/Library/Application Support/CodexDreamSkin"
 [ -x "$INSTALLED_ROOT/runtime/scripts/autoskin-macos.sh" ] || fail "unified installer did not create a stable runtime"
@@ -209,7 +209,7 @@ HOME="$TEST_HOME" "$INSTALLED_ROOT/runtime/scripts/autoskin-macos.sh" quick-them
 echo "Checking repeatable uninstall without a backup..."
 rm -f "$INSTALLED_ROOT/config.before-dream-skin.toml"
 for _ in 1 2; do
-  HOME="$TEST_HOME" "$ROOT/scripts/restore-dream-skin.sh" \
+  HOME="$TEST_HOME" bash "$ROOT/scripts/restore-dream-skin.sh" \
     --uninstall --restore-base-theme --node "$NODE_BIN" >/dev/null
 done
 [ ! -e "$TEST_HOME/Library/Application Support/CodexDreamSkin/runtime" ] || fail "runtime was not removed"

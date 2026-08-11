@@ -67,7 +67,7 @@ case "$COMMAND" in
 
     INSTALL_ARGS=(--port "$PORT" --app "$APP_BUNDLE" --node "$NODE_BIN")
     [ "$NO_AUTO_RECOVER" -ne 1 ] || INSTALL_ARGS+=(--no-auto-recover)
-    "$SCRIPT_DIR/install-dream-skin.sh" "${INSTALL_ARGS[@]}"
+    bash "$SCRIPT_DIR/install-dream-skin.sh" "${INSTALL_ARGS[@]}"
     INSTALLED_SCRIPT="$(dream_state_root)/runtime/scripts/autoskin-macos.sh"
 
     if [ "$NO_START" -eq 1 ]; then
@@ -96,20 +96,20 @@ case "$COMMAND" in
 
     START_ARGS=(--port "$PORT" --app "$APP_BUNDLE" --node "$NODE_BIN")
     [ "$RESTART_EXISTING" -ne 1 ] || START_ARGS+=(--restart-existing)
-    "$(dream_state_root)/runtime/scripts/start-dream-skin.sh" "${START_ARGS[@]}"
+    bash "$(dream_state_root)/runtime/scripts/start-dream-skin.sh" "${START_ARGS[@]}"
     echo "AutoSkin installation is complete."
     ;;
 
   start)
-    exec "$SCRIPT_DIR/start-dream-skin.sh" "$@"
+    exec bash "$SCRIPT_DIR/start-dream-skin.sh" "$@"
     ;;
 
   pause|resume|status)
-    exec "$SCRIPT_DIR/autoskin-menubar-macos.sh" "$COMMAND" "$@"
+    exec bash "$SCRIPT_DIR/autoskin-menubar-macos.sh" "$COMMAND" "$@"
     ;;
 
   quick-theme|create-theme)
-    exec "$SCRIPT_DIR/quick-theme-macos.sh" "$@"
+    exec bash "$SCRIPT_DIR/quick-theme-macos.sh" "$@"
     ;;
 
   theme)
@@ -130,11 +130,11 @@ case "$COMMAND" in
     ;;
 
   verify)
-    exec "$SCRIPT_DIR/verify-dream-skin.sh" "$@"
+    exec bash "$SCRIPT_DIR/verify-dream-skin.sh" "$@"
     ;;
 
   restore)
-    exec "$SCRIPT_DIR/restore-dream-skin.sh" "$@"
+    exec bash "$SCRIPT_DIR/restore-dream-skin.sh" "$@"
     ;;
 
   uninstall)
@@ -163,7 +163,7 @@ case "$COMMAND" in
     RESTORE_ARGS=(--port "$PORT" --uninstall --restore-base-theme)
     [ -z "$APP_PATH" ] || RESTORE_ARGS+=(--app "$APP_PATH")
     [ -z "$NODE_PATH" ] || RESTORE_ARGS+=(--node "$NODE_PATH")
-    exec "$SCRIPT_DIR/restore-dream-skin.sh" "${RESTORE_ARGS[@]}"
+    exec bash "$SCRIPT_DIR/restore-dream-skin.sh" "${RESTORE_ARGS[@]}"
     ;;
 
   doctor)

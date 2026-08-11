@@ -19,7 +19,7 @@ Please include:
 
 1. Operating system and Codex/ChatGPT desktop version.
 2. The exact command or request used.
-3. Output from `scripts/autoskin-macos.sh doctor`, `status`, and `verify` when applicable.
+3. Output from `bash scripts/autoskin-macos.sh doctor`, `status`, and `verify` when applicable.
 4. Whether the problem affects fullscreen home, Banner, new chat, or an existing conversation.
 5. A screenshot with private task names and account details removed.
 
