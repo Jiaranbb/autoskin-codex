@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 2,
+  "id": "replace-me",
+  "meta": {
+    "name": "My Codex Theme",
+    "shortName": "Theme",
+    "edition": "Community Edition",
+    "signature": "Made with AutoSkin ❤",
+    "author": ""
+  },
+  "nativeTheme": {
+    "appearance": "light",
+    "accent": "#149DB8",
+    "surface": "#F7FDFF",
+    "ink": "#173F4B",
+    "contrast": 64,
+    "opaqueWindows": true
+  },
+  "assets": {
+    "background": "assets/background.png",
+    "chatBackground": "assets/background.png",
+    "brandIcon": null,
+    "cardIcons": [null, null, null, null]
+  },
+  "views": {
+    "fullscreen": {
+      "fit": "cover",
+      "scale": 1,
+      "focalPoint": [0.7, 0.5],
+      "opacity": 1,
+      "overlay": {
+        "kind": "radial",
+        "color": "#F3FCFE",
+        "strength": 0.72,
+        "anchor": [0.2, 0.28]
+      },
+      "preserveEdges": { "top": 0, "right": 0, "bottom": 0, "left": 0 }
+    },
+    "banner": {
+      "fit": "cover",
+      "scale": 1.2,
+      "focalPoint": [0.72, 0.35],
+      "opacity": 1,
+      "overlay": {
+        "kind": "linear",
+        "color": "#F3FCFE",
+        "strength": 0.88,
+        "anchor": [0, 0.5]
+      }
+    },
+    "chat": {
+      "fit": "cover",
+      "scale": 1,
+      "focalPoint": [0.7, 0.5],
+      "opacity": 0.12,
+      "overlay": {
+        "kind": "solid",
+        "color": "#FAFEFF",
+        "strength": 0.78,
+        "anchor": [0.5, 0.5]
+      }
+    }
+  },
+  "components": {
+    "chrome": {
+      "background": "#F8FDFF",
+      "title": "#0B7288",
+      "border": "#61CDDF"
+    },
+    "sidebar": {
+      "background": "#F2FCFE",
+      "text": "#225766",
+      "active": "#C6F0F6",
+      "newTask": "#13B4C9"
+    },
+    "cards": {
+      "fill": "#E8FAFD",
+      "opacity": 0.42,
+      "blur": 16,
+      "radius": 18,
+      "border": "none",
+      "shadow": "0 10px 28px rgba(19, 104, 122, 0.14)",
+      "title": "#194F5D",
+      "subtitle": "#447884"
+    },
+    "composer": {
+      "fill": "#F5FDFF",
+      "opacity": 0.82,
+      "blur": 18,
+      "radius": 22,
+      "shadow": "0 14px 34px rgba(19, 104, 122, 0.18)",
+      "outerBackground": "transparent",
+      "text": "#173F4B"
+    }
+  },
+  "content": {
+    "heroTitle": "我们应该在 {{project}} 中做些什么？",
+    "heroSubtitle": "把灵感慢慢变成可用功能",
+    "composerPlaceholder": "写下你的想法…",
+    "cards": [
+      { "title": "探索并理解代码", "subtitle": "快速读懂代码的逻辑与结构" },
+      { "title": "构建新功能", "subtitle": "把想法变成可用功能" },
+      { "title": "审查代码", "subtitle": "细致审查并给出改进建议" },
+      { "title": "修复问题", "subtitle": "定位问题并稳稳修复" }
+    ]
+  },
+  "decorations": [],
+  "advanced": {
+    "customCss": null
+  }
+}

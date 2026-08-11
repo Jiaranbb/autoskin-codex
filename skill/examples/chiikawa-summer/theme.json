@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 2,
+  "id": "chiikawa-summer",
+  "meta": {
+    "name": "Chiikawa 夏日泳池皮肤",
+    "shortName": "Chiikawa 夏日泳池",
+    "edition": "Private Edition for HT",
+    "signature": "Lucky lucky ❤",
+    "author": "Jiaranbb"
+  },
+  "nativeTheme": {
+    "appearance": "light",
+    "accent": "#16ABC4",
+    "surface": "#F8FDFE",
+    "ink": "#184F5F",
+    "contrast": 64,
+    "opaqueWindows": true
+  },
+  "assets": {
+    "background": "assets/pool-background.png",
+    "chatBackground": "assets/pool-background.png",
+    "brandIcon": "assets/brand-icon.png",
+    "cardIcons": [
+      "assets/card-1.webp",
+      "assets/card-2.webp",
+      "assets/card-3.webp",
+      "assets/card-4.webp"
+    ]
+  },
+  "views": {
+    "fullscreen": {
+      "fit": "cover",
+      "scale": 1,
+      "focalPoint": [1, 0.5],
+      "opacity": 1,
+      "overlay": {
+        "kind": "radial",
+        "color": "#F2FDFF",
+        "strength": 0.76,
+        "anchor": [0.21, 0.28]
+      },
+      "preserveEdges": {
+        "top": 0,
+        "right": 0.1,
+        "bottom": 0,
+        "left": 0
+      }
+    },
+    "banner": {
+      "fit": "cover",
+      "scale": 1,
+      "focalPoint": [0.58, 0.38],
+      "opacity": 1,
+      "overlay": {
+        "kind": "linear",
+        "color": "#F2FDFF",
+        "strength": 0.98,
+        "anchor": [0, 0.5]
+      }
+    },
+    "chat": {
+      "fit": "cover",
+      "scale": 1,
+      "focalPoint": [0.54, 0.5],
+      "opacity": 0.18,
+      "overlay": {
+        "kind": "solid",
+        "color": "#F8FEFF",
+        "strength": 0.78,
+        "anchor": [0.5, 0.5]
+      }
+    }
+  },
+  "components": {
+    "chrome": {
+      "background": "#ECFAFC",
+      "title": "#137991",
+      "border": "#5BCAE0"
+    },
+    "sidebar": {
+      "background": "#EDFAFC",
+      "text": "#245D6C",
+      "active": "#C1F0F8",
+      "newTask": "#16ABC4"
+    },
+    "cards": {
+      "fill": "#E8FAFD",
+      "opacity": 0.08,
+      "blur": 4,
+      "radius": 18,
+      "border": "none",
+      "shadow": "0 10px 24px rgba(8, 91, 116, 0.06)",
+      "title": "#184F5F",
+      "subtitle": "#3F7480"
+    },
+    "composer": {
+      "fill": "#F5FDFF",
+      "opacity": 0.91,
+      "blur": 18,
+      "radius": 22,
+      "shadow": "0 14px 32px rgba(8, 92, 118, 0.20)",
+      "outerBackground": "transparent",
+      "text": "#173F4B"
+    }
+  },
+  "content": {
+    "heroTitle": "我们应该在 {{project}} 中做些什么？",
+    "heroSubtitle": "泡进清凉夏日，把灵感慢慢漂起来 ✦",
+    "composerPlaceholder": "在清凉水花里写下你的想法…",
+    "cards": [
+      {
+        "title": "探索并理解代码",
+        "subtitle": "快速读懂代码的逻辑与结构"
+      },
+      {
+        "title": "构建新功能、应用或工具",
+        "subtitle": "把清凉灵感变成可用功能"
+      },
+      {
+        "title": "审查代码并提出修改建议",
+        "subtitle": "细致审查并给出改进建议"
+      },
+      {
+        "title": "修复问题和失败",
+        "subtitle": "定位问题，稳稳给出修复方案"
+      }
+    ]
+  },
+  "decorations": [
+    {
+      "kind": "text",
+      "value": "❤",
+      "surface": "home",
+      "position": [0.07, 0.12],
+      "color": "#F08FA9",
+      "opacity": 0.68,
+      "size": 8
+    },
+    {
+      "kind": "text",
+      "value": "❤",
+      "surface": "home",
+      "position": [0.72, 0.19],
+      "color": "#F08FA9",
+      "opacity": 0.68,
+      "size": 8
+    },
+    {
+      "kind": "text",
+      "value": "❤",
+      "surface": "all",
+      "position": [0.94, 0.36],
+      "color": "#F08FA9",
+      "opacity": 0.58,
+      "size": 8
+    }
+  ],
+  "advanced": {
+    "customCss": null
+  }
+}

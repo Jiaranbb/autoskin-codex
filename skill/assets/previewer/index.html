@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoSkin Codex Preview</title>
+  <link rel="stylesheet" href="preview.css">
+</head>
+<body>
+  <header class="preview-toolbar">
+    <div>
+      <strong id="preview-name">AutoSkin Codex</strong>
+      <span id="preview-mode">fullscreen · desktop</span>
+    </div>
+    <div class="toolbar-controls" aria-label="预览控制">
+      <label>表面
+        <select id="surface">
+          <option value="fullscreen">全屏</option>
+          <option value="banner">Banner</option>
+          <option value="chat">聊天</option>
+        </select>
+      </label>
+      <label>尺寸
+        <select id="viewport">
+          <option value="desktop">1728 × 1117</option>
+          <option value="wide">1920 × 1080</option>
+          <option value="narrow">1280 × 900</option>
+        </select>
+      </label>
+      <label class="toggle"><input id="guides" type="checkbox">安全区</label>
+    </div>
+  </header>
+
+  <main class="stage-shell">
+    <section id="stage" class="stage" aria-label="Codex 主题预览">
+      <div class="window-controls"><i></i><i></i><i></i></div>
+      <header class="app-bar">
+        <div class="brand">
+          <img id="brand-icon" alt="">
+          <div><strong id="brand-title"></strong><small id="brand-edition"></small></div>
+        </div>
+        <em id="brand-signature"></em>
+      </header>
+
+      <aside class="sidebar">
+        <div class="mode-row"><strong>Codex</strong><img id="mode-icon" alt=""></div>
+        <button class="new-task">✎　新建任务</button>
+        <nav>
+          <span>⌂　主页</span><span>◈　智能体</span>
+          <small>项目</small>
+          <span class="active">▱　skill</span>
+          <span>　安装 autoskin-codex</span>
+          <span>　主题预览与验证</span>
+          <span>　安全安装与恢复</span>
+        </nav>
+        <div class="profile">◉</div>
+      </aside>
+
+      <section class="workspace">
+        <div class="background-layer" aria-hidden="true"></div>
+        <div class="overlay-layer" aria-hidden="true"></div>
+        <div class="safe-guides" aria-hidden="true"><span></span></div>
+        <div class="decorations" aria-hidden="true"></div>
+
+        <section class="home-content">
+          <div class="hero-copy">
+            <h1 id="hero-title"></h1>
+            <p id="hero-subtitle"></p>
+          </div>
+          <div id="cards" class="cards"></div>
+          <section class="composer-wrap">
+            <div class="project-label">❤　选择项目</div>
+            <div class="composer">
+              <span id="composer-placeholder"></span>
+              <div class="composer-actions"><b>＋</b><small>🛡 完全访问</small><em>↑</em></div>
+            </div>
+          </section>
+        </section>
+
+        <section class="chat-content">
+          <h2>What should we work on?</h2>
+          <div class="chat-composer">
+            <span id="chat-placeholder"></span>
+            <div>＋　　🛡 完全访问　　　　　　　　　↑</div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+  <script src="theme-data.js"></script>
+  <script src="preview.js"></script>
+</body>
+</html>

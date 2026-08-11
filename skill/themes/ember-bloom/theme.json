@@ -1,0 +1,57 @@
+{
+  "name": "ember-bloom",
+  "order": 20,
+  "notes": {
+    "zh": "示例主题 B：浅色艺术图路线。art.png 是 tools/generate-demo-art.py 程序化生成的原创暖色花瓣纹理（无真人、无界面文字），同样是『干净艺术图』分支。浅图配深色标题 + 近白 overlay 压左侧（对照 aurora-veil 的暗图路线），两份 tokens 一起构成明暗两种取色模板。",
+    "en": "Demo theme B: light-art route. art.png is original generated warm petal art (no people, no UI text), also the 'clean art' branch. Light art pairs with a dark hero title and a near-white left overlay - the mirror template of aurora-veil's dark-art route."
+  },
+  "meta": {
+    "button": "花瓣",
+    "brand": "Ember Bloom 暖光花瓣皮肤",
+    "edition": "Ember Bloom · Demo Edition",
+    "signature": "Ember ♡"
+  },
+  "art": {
+    "home": "art.png",
+    "chat": "art.png"
+  },
+  "cards": {
+    "subtitles": [
+      "读懂每一行代码的脉络",
+      "把灵感慢慢落成实现",
+      "细致审查，温柔打磨质量",
+      "找到问题，给出修复方案"
+    ],
+    "icons": ["code", "wand", "scales", "wrench"]
+  },
+  "tokens": {
+    "--dream-ink": "#6b3a2a",
+    "--dream-purple": "#c26744",
+    "--dream-violet": "#dd8a62",
+    "--dream-pink": "#eaa27a",
+    "--dream-page-bg-0": "#fffdf9",
+    "--dream-page-bg-1": "#fdf0e4",
+    "--dream-page-glow-a": "rgba(246, 192, 140, .32)",
+    "--dream-page-glow-b": "rgba(250, 216, 170, .26)",
+    "--dream-hero-art-size": "auto 300%",
+    "--dream-hero-art-position": "75% 30%",
+    "--dream-fullscreen-art-size": "auto 120%",
+    "--dream-fullscreen-art-position": "72% 40%",
+    "--dream-polaroid-art-size": "300% auto",
+    "--dream-polaroid-art-position": "70% 30%",
+    "--dream-hero-overlay": "linear-gradient(90deg, rgba(255, 250, 243, .96) 0%, rgba(255, 243, 231, .88) 54%, rgba(255, 235, 219, .50) 78%, transparent 100%)",
+    "--dream-fullscreen-overlay": "linear-gradient(90deg, rgba(255, 250, 243, .95) 0%, rgba(255, 241, 228, .84) 47%, rgba(255, 232, 214, .44) 72%, transparent 100%)",
+    "--dream-fullscreen-wash": "rgba(255, 251, 245, .06)",
+    "--dream-hero-title-color": "#5f3123",
+    "--dream-hero-subtitle-color": "rgba(95, 49, 35, .82)",
+    "--dream-hero-title-shadow": "0 1px 0 rgba(255, 255, 255, .92)",
+    "--dream-hero-chip-color": "#b45a33",
+    "--dream-hero-chip-bg": "rgba(255, 255, 255, .58)",
+    "--dream-hero-chip-line": "rgba(196, 116, 74, .36)",
+    "--dream-hero-subtitle": "\"在暖光花瓣间，把热爱慢慢展开 ♡\"",
+    "--dream-chat-art-size": "auto 190%",
+    "--dream-chat-art-position": "80% 35%",
+    "--dream-chat-art-opacity": ".14",
+    "--dream-chat-wash": "rgba(255, 252, 248, .72)"
+  }
+}

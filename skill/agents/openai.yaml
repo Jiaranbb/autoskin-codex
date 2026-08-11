@@ -1,0 +1,4 @@
+interface:
+  display_name: "AutoSkin Codex"
+  short_description: "设计、预览、验证并安全安装 Codex 自定义主题"
+  default_prompt: "Use $autoskin-codex to turn my images and design choices into a previewed, validated, and safely installable Codex theme."

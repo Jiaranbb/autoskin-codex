@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+"""Regression tests for schema-v2 validation and deterministic packaging."""
+
+from __future__ import annotations
+
+import json
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPTS = ROOT / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+
+from theme_core import EXAMPLE_ROOT, build_theme, validate_theme  # noqa: E402
+
+
+class ThemeValidationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory(prefix="autoskin-theme-test-")
+        self.theme = Path(self.temp.name) / "chiikawa-summer"
+        shutil.copytree(EXAMPLE_ROOT, self.theme, ignore=shutil.ignore_patterns(".build"))
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    def read_manifest(self) -> dict[str, object]:
+        return json.loads((self.theme / "theme.json").read_text(encoding="utf-8"))
+
+    def write_manifest(self, manifest: dict[str, object]) -> None:
+        (self.theme / "theme.json").write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
+    def test_bundled_example_is_valid(self) -> None:
+        _, result = validate_theme(self.theme)
+        self.assertTrue(result.ok, result.errors)
+
+    def test_required_background_cannot_be_null(self) -> None:
+        manifest = self.read_manifest()
+        manifest["assets"]["background"] = None  # type: ignore[index]
+        self.write_manifest(manifest)
+        _, result = validate_theme(self.theme)
+        self.assertIn("assets.background must be a relative asset path", result.errors)
+
+    def test_unknown_top_level_field_is_rejected(self) -> None:
+        manifest = self.read_manifest()
+        manifest["surprise"] = True
+        self.write_manifest(manifest)
+        _, result = validate_theme(self.theme)
+        self.assertIn("$.surprise is not a supported field", result.errors)
+
+    def test_remote_url_in_custom_css_is_rejected(self) -> None:
+        custom = self.theme / "custom.css"
+        custom.write_text(
+            ".dream-theme-chiikawa-summer .card { background: url(https://example.com/a.png); }\n",
+            encoding="utf-8",
+        )
+        manifest = self.read_manifest()
+        manifest["advanced"]["customCss"] = "custom.css"  # type: ignore[index]
+        self.write_manifest(manifest)
+        _, result = validate_theme(self.theme)
+        self.assertTrue(
+            any("remote CSS asset URL" in error for error in result.errors),
+            result.errors,
+        )
+
+    def test_package_is_reproducible(self) -> None:
+        first = Path(self.temp.name) / "first.zip"
+        second = Path(self.temp.name) / "second.zip"
+        command = [sys.executable, str(SCRIPTS / "theme_tool.py"), "package", str(self.theme)]
+        subprocess.run(command + ["--output", str(first)], check=True, capture_output=True)
+        subprocess.run(command + ["--output", str(second)], check=True, capture_output=True)
+        self.assertEqual(first.read_bytes(), second.read_bytes())
+
+    def test_runtime_manifest_consumes_preview_content_and_decorations(self) -> None:
+        manifest = self.read_manifest()
+        build_dir, _ = build_theme(self.theme)
+        runtime = json.loads((build_dir / "theme.json").read_text(encoding="utf-8"))
+        self.assertEqual(runtime["content"]["heroTitle"], manifest["content"]["heroTitle"])
+        self.assertEqual(
+            runtime["content"]["cardTitles"],
+            [card["title"] for card in manifest["content"]["cards"]],
+        )
+        self.assertEqual(len(runtime["decorations"]), len(manifest["decorations"]))
+
+    def test_hero_title_preserves_native_project_button(self) -> None:
+        manifest = self.read_manifest()
+        manifest["content"]["heroTitle"] = "A title without a project slot"  # type: ignore[index]
+        self.write_manifest(manifest)
+        _, result = validate_theme(self.theme)
+        self.assertTrue(any("{{project}} exactly once" in error for error in result.errors), result.errors)
+
+
+if __name__ == "__main__":
+    unittest.main()
