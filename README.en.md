@@ -70,7 +70,33 @@ official rightsholders. These assets are not covered by the MIT code license and
 for personal, non-commercial theme customization and sharing. See
 [`skill/examples/chiikawa-summer/ASSET-NOTICE.md`](skill/examples/chiikawa-summer/ASSET-NOTICE.md).
 
-## License and attribution
+## Related projects
+
+- [ecommerce-helper](https://github.com/Jiaranbb/ecommerce-helper) — a complete e-commerce asset-pack Skill from new-product research and RMB pricing to PDP and social content;
+- [report-helper](https://github.com/Jiaranbb/report-helper) — long-form, source-linked research reports and polished PDFs from one request;
+- [content-reader](https://github.com/Jiaranbb/content-reader) — agent skills for saving Xiaohongshu, Twitter/X, YouTube, and Bilibili content;
+- [xhs-reader](https://github.com/Jiaranbb/xhs-reader) — save Xiaohongshu posts locally without logging in;
+- [pdf-reader](https://github.com/Jiaranbb/pdf-reader) — convert PDFs into Markdown with page markers and quality metrics;
+- [dreamy-photo](https://github.com/Jiaranbb/dreamy-photo) — dreamy photo editing while preserving real subject details;
+- [jiucai-helper](https://github.com/Jiaranbb/jiucai-helper) — a testable personal investment-decision Skill combining method and discipline.
+
+See more original projects on [Jiaranbb's GitHub profile](https://github.com/Jiaranbb?tab=repositories).
+
+## About the author
+
+**Jiaran (Jiaranbb)** — independent developer / AI Builder
+
+I turn workflows I genuinely need into reusable AI tools and Skills.
+
+- Website: [c.aoao.ai](https://c.aoao.ai)
+- GitHub: [github.com/Jiaranbb](https://github.com/Jiaranbb)
+- X/Twitter: [@_jiaran](https://x.com/_jiaran)
+- WeChat: `evadebot`
+- WeChat official account: **嘉然学习笔记**
+- Support: [SUPPORT.md](SUPPORT.md)
+- Project issues: [GitHub Issues](https://github.com/Jiaranbb/autoskin-codex/issues)
+
+## License
 
 Project code is released under the [MIT License](LICENSE). The adapted upstream runtime retains its
 original notice in
