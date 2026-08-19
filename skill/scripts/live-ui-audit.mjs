@@ -146,6 +146,7 @@ const auditExpression = `(() => {
     visible(node) && ['Chat', 'Work'].includes((node.innerText || '').trim()));
   const measured = [hero, ...cards, composer, usageOrb].filter(Boolean);
   const usagePercent = Number(usageOrbNode?.dataset.dreamUsagePercent);
+  const usageOffsetX = innerWidth < 800 ? -16 : -20;
   const checks = {
     skinInstalled: document.documentElement.classList.contains('codex-dream-skin'),
     adapterConfident: Boolean(state?.adapter?.version) && state.adapter.confidence >= 0.65,
@@ -159,10 +160,12 @@ const auditExpression = `(() => {
     }),
     usageOrb: surface === 'utility' || (Number.isFinite(usagePercent) &&
       usagePercent >= 0 && usagePercent <= 100 &&
-      Boolean(usageOrbNode && getComputedStyle(usageOrbNode, '::before').backgroundImage.includes('linear-gradient')) &&
+      Boolean(usageOrbNode?.querySelector(':scope > .dream-usage-orb-fill')) &&
+      getComputedStyle(usageOrbNode, '::before').webkitMaskImage !== 'none' &&
+      !usageOrbNode.hasAttribute('title') &&
       usageOrbNode.textContent.trim() === '' && /% remaining.*Resets/.test(usageOrbNode.dataset.tooltip || '') &&
-      Boolean(usageOrb && composer && Math.abs(usageOrb.x - (composer.x - 17)) <= 2 &&
-        Math.abs(usageOrb.y - (composer.y - 17)) <= 2)),
+      Boolean(usageOrb && composer && Math.abs(usageOrb.x - (composer.x + usageOffsetX)) <= 2 &&
+        Math.abs(usageOrb.y - (composer.y - 18)) <= 2)),
     composerLocal: surface === 'utility' || (Boolean(composer) && composer.height < innerHeight * .45 &&
       composer.width * composer.height < innerWidth * innerHeight * .5),
     composerHit: surface === 'utility' || Boolean(composerNode && composer &&

@@ -11,7 +11,7 @@
   const THEME_STORAGE_KEY = "codex-dream-skin.theme";
   const USAGE_STORAGE_KEY = "codex-dream-skin.usage-percent";
   const USAGE_RESET_STORAGE_KEY = "codex-dream-skin.usage-reset-at";
-  const STYLE_VERSION = "23";
+  const STYLE_VERSION = "25";
   const ADAPTER_VERSION = "semantic-3";
   const LAYOUTS = new Set(["banner", "fullscreen"]);
   // Sidebar "new task" row gets a marker class so the structure CSS can restyle
@@ -237,6 +237,13 @@
       orb.tabIndex = 0;
       composer.appendChild(orb);
     }
+    let fill = orb.querySelector(":scope > .dream-usage-orb-fill");
+    if (!fill) {
+      fill = document.createElement("span");
+      fill.className = "dream-usage-orb-fill";
+      fill.setAttribute("aria-hidden", "true");
+      orb.appendChild(fill);
+    }
     const value = Number.isFinite(usagePercent) ? usagePercent : null;
     const level = value === null ? "unknown" : value >= 60 ? "high" : value >= 30 ? "medium" : "low";
     const reset = formatResetTime(usageResetAt);
@@ -245,7 +252,9 @@
     orb.dataset.level = level;
     orb.dataset.dreamUsagePercent = value === null ? "" : String(value);
     orb.dataset.tooltip = tooltip;
-    orb.title = tooltip;
+    // The custom tooltip is the only visible hint. A native title would create
+    // a second platform tooltip after hovering for a moment.
+    orb.removeAttribute("title");
     orb.style.setProperty("--dream-usage-percent", value === null ? "0" : String(value));
     if (value === null) {
       orb.removeAttribute("aria-valuenow");
@@ -799,12 +808,12 @@
     },
     get usagePercent() { return usagePercent; },
     get usageResetAt() { return usageResetAt; },
-    version: "3.4.3"
+    version: "3.5.1"
   };
   ensure();
   return {
     installed: true,
-    version: "3.4.3",
+    version: "3.5.1",
     layout: activeLayout,
     theme: activeTheme,
     themes: [...THEME_ORDER],

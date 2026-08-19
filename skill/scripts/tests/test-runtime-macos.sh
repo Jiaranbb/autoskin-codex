@@ -84,6 +84,10 @@ grep -q 'usageOrb' "$ROOT/scripts/live-ui-audit.mjs" || \
   fail "live UI audit does not verify the usage orb"
 grep -q 'dream-usage-orb' "$ROOT/assets/renderer-inject.js" || \
   fail "weekly usage is not rendered as a composer orb"
+grep -q 'dream-usage-orb-fill' "$ROOT/assets/renderer-inject.js" || \
+  fail "weekly usage heart has no liquid fill element"
+grep -q 'removeAttribute("title")' "$ROOT/assets/renderer-inject.js" || \
+  fail "usage heart can still show a duplicate native tooltip"
 grep -q 'setAttribute("role", "progressbar")' "$ROOT/assets/renderer-inject.js" || \
   fail "usage quota does not expose accessible progress semantics"
 grep -q 'getQueryData(\["rate-limit-status"\])' "$ROOT/assets/renderer-inject.js" || \
