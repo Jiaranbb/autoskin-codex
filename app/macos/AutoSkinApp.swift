@@ -10,8 +10,6 @@ private struct CommandResult {
 private final class AutoSkinAppDelegate: NSObject, NSApplicationDelegate {
     private let worker = DispatchQueue(label: "app.autoskin.codex.worker", qos: .userInitiated)
     private var statusItem: NSStatusItem!
-    private var stateItem: NSMenuItem!
-    private var busyItem: NSMenuItem!
     private var themesMenu: NSMenu!
     private var refreshTimer: Timer?
 
@@ -51,36 +49,11 @@ private final class AutoSkinAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let menu = NSMenu()
-        stateItem = NSMenuItem(title: "Checking AutoSkin…", action: nil, keyEquivalent: "")
-        stateItem.isEnabled = false
-        menu.addItem(stateItem)
-
-        busyItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-        busyItem.isEnabled = false
-        busyItem.isHidden = true
-        menu.addItem(busyItem)
-        menu.addItem(.separator())
-
         let themesItem = NSMenuItem(title: "Themes", action: nil, keyEquivalent: "")
         themesMenu = NSMenu()
         themesMenu.addItem(NSMenuItem(title: "Detecting themes…", action: nil, keyEquivalent: ""))
         themesItem.submenu = themesMenu
         menu.addItem(themesItem)
-        menu.addItem(item("Re-scan and Apply", #selector(rescanAndApply)))
-        menu.addItem(item("Verify", #selector(verifySkin)))
-        menu.addItem(.separator())
-        menu.addItem(item("Pause Skin", #selector(pauseSkin)))
-        menu.addItem(item("Resume Skin", #selector(resumeSkin)))
-
-        let layout = NSMenuItem(title: "Layout", action: nil, keyEquivalent: "")
-        let layoutMenu = NSMenu()
-        layoutMenu.addItem(item("Fullscreen", #selector(useFullscreen)))
-        layoutMenu.addItem(item("Banner", #selector(useBanner)))
-        layout.submenu = layoutMenu
-        menu.addItem(layout)
-        menu.addItem(.separator())
-        menu.addItem(item("Open Theme Folder", #selector(openThemeFolder)))
-        menu.addItem(item("Refresh Status", #selector(refreshStatusAction), key: "r"))
         menu.addItem(.separator())
         menu.addItem(item("Quit AutoSkin", #selector(quit), key: "q"))
         statusItem.menu = menu
@@ -113,9 +86,8 @@ private final class AutoSkinAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setBusy(_ text: String?) {
-        busyItem.title = text ?? ""
-        busyItem.isHidden = text == nil
         statusItem.button?.appearsDisabled = text != nil
+        statusItem.button?.toolTip = text ?? "AutoSkin for Codex"
     }
 
     private func runAction(
@@ -156,30 +128,33 @@ private final class AutoSkinAppDelegate: NSObject, NSApplicationDelegate {
                 return (String(line[..<split]), String(line[line.index(after: split)...]))
             })
             let session = values["session"] ?? (result.exitCode == 0 ? "unknown" : "not installed")
-            let theme = values["theme"].flatMap { $0.isEmpty ? nil : $0 } ?? "—"
-            let layout = values["layout"].flatMap { $0.isEmpty ? nil : $0 } ?? "—"
-            let adapter = Double(values["adapter"] ?? "").map { " · DOM \(Int(($0 * 100).rounded()))%" } ?? ""
             let themeResult = self.run("themes")
             DispatchQueue.main.async {
-                self.stateItem.title = "Status: \(session) · \(theme) · \(layout)\(adapter)"
                 self.statusItem.button?.contentTintColor = session == "active" ? .systemTeal : nil
-                self.updateThemesMenu(themeResult, selected: values["theme"] ?? "")
+                self.updateThemesMenu(
+                    themeResult,
+                    selected: values["theme"] ?? "",
+                    originalSelected: session == "paused"
+                )
             }
         }
     }
 
-    private func updateThemesMenu(_ result: CommandResult, selected: String) {
+    private func updateThemesMenu(_ result: CommandResult, selected: String, originalSelected: Bool) {
         themesMenu.removeAllItems()
+        let original = item("Original Codex Skin", #selector(selectTheme))
+        original.representedObject = "__original__"
+        original.state = originalSelected ? .on : .off
+        themesMenu.addItem(original)
+
         guard result.exitCode == 0,
               let data = result.output.data(using: .utf8),
               let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let themes = object["themes"] as? [[String: Any]],
               !themes.isEmpty else {
-            let empty = NSMenuItem(title: "No installed themes", action: nil, keyEquivalent: "")
-            empty.isEnabled = false
-            themesMenu.addItem(empty)
             return
         }
+        themesMenu.addItem(.separator())
         for theme in themes {
             guard let identifier = theme["name"] as? String else { continue }
             let title = (theme["button"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? identifier
@@ -205,41 +180,13 @@ private final class AutoSkinAppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    @objc private func rescanAndApply() {
-        runAction("ensure", title: "Re-scan and apply AutoSkin", showSuccess: true)
-    }
-
     @objc private func selectTheme(_ sender: NSMenuItem) {
         guard let identifier = sender.representedObject as? String else { return }
-        runAction("theme", arguments: [identifier], title: "Switch to \(sender.title)")
-    }
-
-    @objc private func verifySkin() {
-        runAction("verify", title: "Verify AutoSkin", showSuccess: true)
-    }
-
-    @objc private func pauseSkin() {
-        runAction("pause", title: "Pause AutoSkin")
-    }
-
-    @objc private func resumeSkin() {
-        runAction("resume", title: "Resume AutoSkin", showSuccess: true)
-    }
-
-    @objc private func useFullscreen() {
-        runAction("layout", arguments: ["fullscreen"], title: "Use fullscreen layout")
-    }
-
-    @objc private func useBanner() {
-        runAction("layout", arguments: ["banner"], title: "Use banner layout")
-    }
-
-    @objc private func openThemeFolder() {
-        runAction("open-themes", title: "Open theme folder")
-    }
-
-    @objc private func refreshStatusAction() {
-        refreshStatus()
+        if identifier == "__original__" {
+            runAction("original", title: "Use Original Codex Skin")
+        } else {
+            runAction("theme", arguments: [identifier], title: "Switch to \(sender.title)")
+        }
     }
 
     @objc private func quit() {

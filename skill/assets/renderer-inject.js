@@ -10,7 +10,8 @@
   const LAYOUT_STORAGE_KEY = "codex-dream-skin.layout";
   const THEME_STORAGE_KEY = "codex-dream-skin.theme";
   const USAGE_STORAGE_KEY = "codex-dream-skin.usage-percent";
-  const STYLE_VERSION = "15";
+  const USAGE_RESET_STORAGE_KEY = "codex-dream-skin.usage-reset-at";
+  const STYLE_VERSION = "22";
   const ADAPTER_VERSION = "semantic-3";
   const LAYOUTS = new Set(["banner", "fullscreen"]);
   // Sidebar "new task" row gets a marker class so the structure CSS can restyle
@@ -96,8 +97,15 @@
   };
 
   let usagePercent = Number.isFinite(previous?.usagePercent) ? previous.usagePercent : null;
+  let usageResetAt = Number.isFinite(previous?.usageResetAt) ? previous.usageResetAt : null;
   if (!Number.isFinite(usagePercent)) {
     try { usagePercent = parseUsagePercent(localStorage.getItem(USAGE_STORAGE_KEY)); } catch {}
+  }
+  if (!Number.isFinite(usageResetAt)) {
+    try {
+      const cached = Number(localStorage.getItem(USAGE_RESET_STORAGE_KEY));
+      if (Number.isFinite(cached) && cached > 0) usageResetAt = cached;
+    } catch {}
   }
 
   // Search a small React-props neighborhood around the native profile button.
@@ -130,23 +138,56 @@
     return null;
   };
 
-  const resolveUsagePercent = (sidePanel) => {
+  const resolveRateLimitStatus = (profileButton) => {
+    const fiberKey = Object.keys(profileButton ?? {}).find((key) => key.startsWith("__reactFiber$"));
+    let fiber = fiberKey ? profileButton[fiberKey] : null;
+    for (let level = 0; fiber && level < 60; level += 1, fiber = fiber.return) {
+      let hook = fiber.memoizedState;
+      for (let hookIndex = 0; hook && hookIndex < 90; hookIndex += 1, hook = hook.next) {
+        const memo = hook.memoizedState;
+        const candidates = [memo, memo?.current, ...(Array.isArray(memo?.deps) ? memo.deps : [])];
+        for (const candidate of candidates) {
+          const queryClient = typeof candidate?.getQueryData === "function" ? candidate : candidate?.queryClient;
+          if (typeof queryClient?.getQueryData !== "function") continue;
+          try {
+            const status = queryClient.getQueryData(["rate-limit-status"]);
+            if (status?.rate_limit) return status;
+          } catch {}
+        }
+      }
+    }
+    return null;
+  };
+
+  const resolveUsageData = (sidePanel) => {
+    const profileButton = sidePanel?.querySelector(
+      'button[aria-label="Open profile menu"], button[aria-label="打开个人资料菜单"]'
+    );
+    const status = resolveRateLimitStatus(profileButton);
+    const weeklyWindow = [status?.rate_limit?.primary_window, status?.rate_limit?.secondary_window]
+      .filter((window) => Number.isFinite(window?.used_percent) && Number.isFinite(window?.limit_window_seconds))
+      .sort((left, right) =>
+        Math.abs(left.limit_window_seconds - 604800) - Math.abs(right.limit_window_seconds - 604800))[0];
+    if (weeklyWindow && Math.abs(weeklyWindow.limit_window_seconds - 604800) <= 3600) {
+      return {
+        percent: Math.max(0, Math.min(100, Math.round(100 - weeklyWindow.used_percent))),
+        resetAt: Number.isFinite(weeklyWindow.reset_at) ? weeklyWindow.reset_at : null,
+      };
+    }
+
     const usageItem = [...document.querySelectorAll('[role="menuitem"]')].find((node) =>
       /usage|用量|额度/i.test(node.textContent || "") && parseUsagePercent(node.textContent) !== null
     );
     const visibleValue = parseUsagePercent(usageItem?.textContent);
-    if (visibleValue !== null) return visibleValue;
+    if (visibleValue !== null) return { percent: visibleValue, resetAt: usageResetAt };
 
-    const profileButton = sidePanel?.querySelector(
-      'button[aria-label="Open profile menu"], button[aria-label="打开个人资料菜单"]'
-    );
     const fiberKey = Object.keys(profileButton ?? {}).find((key) => key.startsWith("__reactFiber$"));
     let fiber = fiberKey ? profileButton[fiberKey] : null;
     for (let level = 0; fiber && level < 42; level += 1, fiber = fiber.return) {
       const found = findUsageValue(fiber.memoizedProps);
-      if (found !== null) return found;
+      if (found !== null) return { percent: found, resetAt: usageResetAt };
     }
-    return Number.isFinite(usagePercent) ? usagePercent : null;
+    return { percent: usagePercent, resetAt: usageResetAt };
   };
 
   const syncThemeMeta = () => {
@@ -172,6 +213,46 @@
       line.textContent = boardLines[index] ?? "";
       line.style.display = boardLines[index] ? "" : "none";
     });
+  };
+
+  const formatResetTime = (resetAt) => {
+    if (!Number.isFinite(resetAt)) return null;
+    try {
+      return new Intl.DateTimeFormat("en-US", {
+        month: "short", day: "numeric", year: "numeric",
+        hour: "numeric", minute: "2-digit", timeZoneName: "short",
+      }).format(new Date(resetAt * 1000));
+    } catch { return null; }
+  };
+
+  const syncUsageOrb = (composer) => {
+    if (!composer) return;
+    let orb = composer.querySelector(":scope > .dream-usage-orb");
+    if (!orb) {
+      orb = document.createElement("span");
+      orb.className = "dream-usage-orb";
+      orb.setAttribute("role", "progressbar");
+      orb.setAttribute("aria-valuemin", "0");
+      orb.setAttribute("aria-valuemax", "100");
+      orb.tabIndex = 0;
+      composer.appendChild(orb);
+    }
+    const value = Number.isFinite(usagePercent) ? usagePercent : null;
+    const level = value === null ? "unknown" : value >= 60 ? "high" : value >= 30 ? "medium" : "low";
+    const reset = formatResetTime(usageResetAt);
+    const tooltip = value === null ? "Weekly usage unavailable" :
+      `${value}% remaining${reset ? ` · Resets ${reset}` : ""}`;
+    orb.dataset.level = level;
+    orb.dataset.dreamUsagePercent = value === null ? "" : String(value);
+    orb.dataset.tooltip = tooltip;
+    orb.title = tooltip;
+    orb.style.setProperty("--dream-usage-percent", value === null ? "0" : String(value));
+    if (value === null) {
+      orb.removeAttribute("aria-valuenow");
+    } else {
+      orb.setAttribute("aria-valuenow", String(value));
+    }
+    orb.setAttribute("aria-label", tooltip);
   };
 
   const textNodesOutside = (root, excluded) => {
@@ -544,22 +625,23 @@
     // style would treat the marker's own skin as a native composer signal.
     document.querySelectorAll(".dream-composer-surface").forEach((candidate) => {
       candidate.classList.remove("dream-composer-surface");
-      delete candidate.dataset.dreamUsagePercent;
-      candidate.style.removeProperty("--dream-usage-percent");
-      candidate.style.removeProperty("--dream-usage-label");
     });
     const composer = findComposerSurface(activeHome || document);
-    const resolvedUsage = resolveUsagePercent(sidePanel);
-    if (Number.isFinite(resolvedUsage)) {
-      usagePercent = Math.max(0, Math.min(100, Math.round(resolvedUsage)));
+    const resolvedUsage = resolveUsageData(sidePanel);
+    if (Number.isFinite(resolvedUsage.percent)) {
+      usagePercent = Math.max(0, Math.min(100, Math.round(resolvedUsage.percent)));
       try { localStorage.setItem(USAGE_STORAGE_KEY, `${usagePercent}%`); } catch {}
     }
-    if (composer) {
-      const label = Number.isFinite(usagePercent) ? `${usagePercent}%` : "··";
-      composer.dataset.dreamUsagePercent = Number.isFinite(usagePercent) ? String(usagePercent) : "";
-      composer.style.setProperty("--dream-usage-percent", Number.isFinite(usagePercent) ? String(usagePercent) : "0");
-      composer.style.setProperty("--dream-usage-label", `"${label}"`);
+    if (Number.isFinite(resolvedUsage.resetAt)) {
+      usageResetAt = resolvedUsage.resetAt;
+      try { localStorage.setItem(USAGE_RESET_STORAGE_KEY, String(usageResetAt)); } catch {}
     }
+    document.querySelectorAll(".dream-usage-orb").forEach((orb) => {
+      if (!composer || orb.parentElement !== composer) orb.remove();
+    });
+    // Remove the retired inline bar when upgrading a live renderer from 3.3.x.
+    document.querySelectorAll(".dream-usage-gauge").forEach((node) => node.remove());
+    syncUsageOrb(composer);
     const surfaceKind = workHome ? "work-home" : chatHome ? "chat-home" :
       composer ? "conversation" : "utility";
     adapterState.signals.surface = surfaceKind;
@@ -666,12 +748,8 @@
     document.querySelectorAll(".dream-home-shell").forEach((node) => node.classList.remove("dream-home-shell"));
     document.querySelectorAll(".dream-conversation-shell").forEach((node) => node.classList.remove("dream-conversation-shell"));
     document.querySelectorAll(".dream-new-task").forEach((node) => node.classList.remove("dream-new-task"));
-    document.querySelectorAll(".dream-composer-surface").forEach((node) => {
-      node.classList.remove("dream-composer-surface");
-      delete node.dataset.dreamUsagePercent;
-      node.style.removeProperty("--dream-usage-percent");
-      node.style.removeProperty("--dream-usage-label");
-    });
+    document.querySelectorAll(".dream-composer-surface").forEach((node) => node.classList.remove("dream-composer-surface"));
+    document.querySelectorAll(".dream-usage-orb, .dream-usage-gauge").forEach((node) => node.remove());
     for (const marker of ["dream-sidebar", "dream-main-surface", "dream-suggestions", "dream-hero-source"]) {
       document.querySelectorAll(`.${marker}`).forEach((node) => node.classList.remove(marker));
     }
@@ -720,12 +798,13 @@
       return { version: adapterState.version, confidence: adapterState.confidence, signals: { ...adapterState.signals } };
     },
     get usagePercent() { return usagePercent; },
-    version: "3.2.0"
+    get usageResetAt() { return usageResetAt; },
+    version: "3.4.2"
   };
   ensure();
   return {
     installed: true,
-    version: "3.2.0",
+    version: "3.4.2",
     layout: activeLayout,
     theme: activeTheme,
     themes: [...THEME_ORDER],

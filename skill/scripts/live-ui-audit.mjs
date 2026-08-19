@@ -125,6 +125,8 @@ const auditExpression = `(() => {
   const chatHome = first('.dream-chat-home');
   const composerNode = first('.composer-surface-chrome, .dream-composer-surface');
   const composer = box(composerNode);
+  const usageOrbNode = first('.dream-usage-orb');
+  const usageOrb = box(usageOrbNode);
   const surface = workHome ? 'work-home' : chatHome ? 'chat-home' :
     composerNode ? 'conversation' : 'utility';
   const sidebarNode = first('.dream-sidebar');
@@ -142,8 +144,8 @@ const auditExpression = `(() => {
     .filter((node) => visible(node) && !composerNode?.contains(node) && !node.closest('header')) : [];
   const modeButtons = [...document.querySelectorAll('button')].filter((node) =>
     visible(node) && ['Chat', 'Work'].includes((node.innerText || '').trim()));
-  const measured = [hero, ...cards, composer].filter(Boolean);
-  const usagePercent = Number(composerNode?.dataset.dreamUsagePercent);
+  const measured = [hero, ...cards, composer, usageOrb].filter(Boolean);
+  const usagePercent = Number(usageOrbNode?.dataset.dreamUsagePercent);
   const checks = {
     skinInstalled: document.documentElement.classList.contains('codex-dream-skin'),
     adapterConfident: Boolean(state?.adapter?.version) && state.adapter.confidence >= 0.65,
@@ -155,9 +157,12 @@ const auditExpression = `(() => {
       const rect = button.getBoundingClientRect();
       return button.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
     }),
-    usageGauge: surface === 'utility' || (Number.isFinite(usagePercent) &&
+    usageOrb: surface === 'utility' || (Number.isFinite(usagePercent) &&
       usagePercent >= 0 && usagePercent <= 100 &&
-      getComputedStyle(composerNode, '::before').backgroundImage.includes('conic-gradient')),
+      Boolean(usageOrbNode && getComputedStyle(usageOrbNode, '::before').backgroundImage.includes('linear-gradient')) &&
+      usageOrbNode.textContent.trim() === '' && /% remaining.*Resets/.test(usageOrbNode.dataset.tooltip || '') &&
+      Boolean(usageOrb && composer && Math.abs(usageOrb.x - (composer.x - 17)) <= 2 &&
+        Math.abs(usageOrb.y - (composer.y - 17)) <= 2)),
     composerLocal: surface === 'utility' || (Boolean(composer) && composer.height < innerHeight * .45 &&
       composer.width * composer.height < innerWidth * innerHeight * .5),
     composerHit: surface === 'utility' || Boolean(composerNode && composer &&
@@ -181,7 +186,7 @@ const auditExpression = `(() => {
     layout: state?.layout ?? null,
     adapter: state?.adapter ?? null,
     viewport: { width: innerWidth, height: innerHeight },
-    geometry: { main, sidebar, hero, cards, composer, visibleMessages: messages.length },
+    geometry: { main, sidebar, hero, cards, composer, usageOrb, visibleMessages: messages.length },
     usagePercent: Number.isFinite(usagePercent) ? usagePercent : null,
     checks,
     pass: Object.values(checks).every(Boolean),

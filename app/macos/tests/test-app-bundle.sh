@@ -14,6 +14,14 @@ RESOURCES="$APP/Contents/Resources"
 grep -q 'needs_apply=true' "$RESOURCES/autoskin-app-command.sh"
 [ -f "$RESOURCES/AutoSkinRuntime/examples/chiikawa-summer/theme.json" ]
 [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist")" = "app.autoskin.codex" ]
+grep -q 'Original Codex Skin' "$REPO_ROOT/app/macos/AutoSkinApp.swift"
+grep -q 'runAction("original"' "$REPO_ROOT/app/macos/AutoSkinApp.swift"
+grep -q '^  original)' "$RESOURCES/autoskin-app-command.sh"
+if grep -Eq 'menu\.addItem\(item\("(Verify|Pause Skin|Resume Skin|Layout|Open Theme Folder|Refresh Status|Re-scan and Apply)' \
+  "$REPO_ROOT/app/macos/AutoSkinApp.swift"; then
+  echo "AutoSkin status menu contains controls outside Themes and Quit" >&2
+  exit 1
+fi
 
 mkdir -p "$TEST_ROOT/home"
 STATUS="$(HOME="$TEST_ROOT/home" AUTOSKIN_RESOURCE_ROOT="$RESOURCES" \

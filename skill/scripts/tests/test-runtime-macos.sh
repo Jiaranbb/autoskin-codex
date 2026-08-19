@@ -75,8 +75,14 @@ grep -q 'const localSurface' "$ROOT/assets/renderer-inject.js" || \
   fail "composer resolver can still promote a whole-page painted ancestor"
 grep -q 'remainingPercent' "$ROOT/assets/renderer-inject.js" || \
   fail "usage gauge does not consume Codex remaining quota semantically"
-grep -q 'usageGauge' "$ROOT/scripts/live-ui-audit.mjs" || \
-  fail "live UI audit does not verify the composer usage gauge"
+grep -q 'usageOrb' "$ROOT/scripts/live-ui-audit.mjs" || \
+  fail "live UI audit does not verify the usage orb"
+grep -q 'dream-usage-orb' "$ROOT/assets/renderer-inject.js" || \
+  fail "weekly usage is not rendered as a composer orb"
+grep -q 'setAttribute("role", "progressbar")' "$ROOT/assets/renderer-inject.js" || \
+  fail "usage quota does not expose accessible progress semantics"
+grep -q 'getQueryData(\["rate-limit-status"\])' "$ROOT/assets/renderer-inject.js" || \
+  fail "usage orb does not read Codex rate-limit reset data"
 
 echo "Checking that the public runtime has no bundled fallback themes..."
 if "$NODE_BIN" "$ROOT/scripts/injector.mjs" --themes >"$TMP_ROOT/themes.json" 2>"$TMP_ROOT/themes.error"; then

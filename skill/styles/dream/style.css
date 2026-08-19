@@ -347,6 +347,98 @@ html.codex-dream-skin .dream-main-surface > header.app-header-tint {
 }
 #codex-dream-skin-chrome.dream-home-shell .dream-signature { display: block; }
 
+/* Diablo-like weekly usage orb: a pearlescent ice-blue bezel around an
+   ocean-blue liquid level. It contains no visible text; exact data appears
+   on hover. */
+.dream-usage-orb {
+  --dream-orb-deep: #075f82;
+  --dream-orb-bright: #37d8ee;
+  position: absolute;
+  left: -17px;
+  top: -17px;
+  z-index: 24;
+  width: 36px;
+  height: 36px;
+  box-sizing: border-box;
+  display: block;
+  border: 0;
+  border-radius: 50%;
+  outline: none;
+  cursor: help;
+  pointer-events: auto;
+  background:
+    conic-gradient(from 218deg,
+      #b9eef6, #3b8fa8 20%, #e7fcff 34%, #59bfd2 50%, #25677f 72%, #91dce8 88%, #b9eef6);
+  box-shadow:
+    0 5px 13px rgba(9,84,111,.25),
+    0 0 0 1px rgba(255,255,255,.72),
+    inset 0 0 0 1px rgba(226,251,255,.58);
+}
+
+.dream-usage-orb[data-level="medium"] {
+  --dream-orb-deep: #164d7b;
+  --dream-orb-bright: #8b79e7;
+}
+
+.dream-usage-orb[data-level="low"] {
+  --dream-orb-deep: #172d51;
+  --dream-orb-bright: #df557f;
+}
+
+.dream-usage-orb[data-level="unknown"] { opacity: .62; }
+
+.dream-usage-orb::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 23%, rgba(255,255,255,.82) 0 5%, rgba(255,255,255,.20) 8%, transparent 22%),
+    radial-gradient(ellipse at 50% 112%, color-mix(in srgb, var(--dream-orb-bright) 52%, transparent), transparent 58%),
+    linear-gradient(to top,
+      var(--dream-orb-deep) 0%,
+      var(--dream-orb-bright) calc(var(--dream-usage-percent, 0) * 1%),
+      #0b2a3b calc(var(--dream-usage-percent, 0) * 1% + 1%),
+      #051923 100%);
+  box-shadow:
+    inset 0 0 7px rgba(0,0,0,.82),
+    inset 0 -3px 7px color-mix(in srgb, var(--dream-orb-bright) 48%, transparent),
+    0 0 6px color-mix(in srgb, var(--dream-orb-bright) 35%, transparent);
+  transition: background .3s ease, box-shadow .3s ease;
+}
+
+.dream-usage-orb::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 43px;
+  top: 0;
+  z-index: 80;
+  width: max-content;
+  max-width: min(330px, calc(100vw - 90px));
+  padding: 7px 10px;
+  border: 1px solid rgba(111,190,219,.36);
+  border-radius: 9px;
+  color: #e9faff;
+  background: linear-gradient(145deg, rgba(5,18,29,.96), rgba(13,43,58,.94));
+  box-shadow: 0 8px 22px rgba(0,13,25,.32), inset 0 1px rgba(255,255,255,.07);
+  font: 600 11px/1.3 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .01em;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-4px);
+  transition: opacity .16s ease, transform .16s ease, visibility 0s linear .16s;
+  pointer-events: none;
+}
+
+.dream-usage-orb:is(:hover, :focus-visible)::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+  transition-delay: 0s;
+}
+
 .dream-sparkles { position: absolute; inset: 48px 0 0; display: none; opacity: .72; }
 #codex-dream-skin-chrome:is(.dream-home-shell, .dream-conversation-shell) .dream-sparkles { display: block; }
 .dream-sparkles i { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: white; box-shadow: 0 0 10px 3px rgba(255,112,196,.66); }
@@ -1061,34 +1153,7 @@ html.codex-dream-skin :is(.composer-surface-chrome, .dream-composer-surface) {
 }
 
 html.codex-dream-skin :is(.composer-surface-chrome, .dream-composer-surface)::before {
-  content: var(--dream-usage-label, "··");
-  position: absolute;
-  left: -25px;
-  top: -24px;
-  z-index: 20;
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  pointer-events: none;
-  border: 2px solid rgba(255,255,255,.92);
-  color: var(--autoskin-sidebar-text, var(--dream-purple));
-  background:
-    radial-gradient(circle,
-      color-mix(in srgb, var(--autoskin-sidebar-bg, #ffffff) 72%, #ffffff) 0 54%,
-      transparent 57%),
-    conic-gradient(from -90deg,
-      var(--autoskin-new-task, var(--dream-purple)) 0 calc(var(--dream-usage-percent, 0) * 1%),
-      color-mix(in srgb, var(--dream-pink) 22%, rgba(255,255,255,.74)) 0 100%);
-  box-shadow:
-    0 6px 16px color-mix(in srgb, var(--autoskin-new-task, var(--dream-purple)) 30%, transparent),
-    inset 0 0 0 1px rgba(255,255,255,.46);
-  font-size: 11px;
-  line-height: 1;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -.02em;
+  content: none;
 }
 
 .dream-home div:has(> .horizontal-scroll-fade-mask .group\/project-selector) {

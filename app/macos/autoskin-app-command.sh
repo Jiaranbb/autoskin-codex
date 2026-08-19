@@ -9,6 +9,7 @@ THEME_INSTALLER="$AUTOSKIN_ROOT/scripts/install_theme.py"
 STARTER_THEME="$AUTOSKIN_ROOT/examples/chiikawa-summer"
 INSTALLED_ROOT="$HOME/Library/Application Support/CodexDreamSkin/runtime"
 INSTALLED_CLI="$INSTALLED_ROOT/scripts/autoskin-macos.sh"
+INSTALLED_MENU="$INSTALLED_ROOT/scripts/autoskin-menubar-macos.sh"
 SCREENSHOT_ROOT="$HOME/Library/Application Support/AutoSkinCodex/verification"
 APP_STATE_ROOT="$HOME/Library/Application Support/AutoSkinCodex"
 APP_INFO="$RESOURCE_ROOT/../Info.plist"
@@ -50,6 +51,9 @@ ensure_skin() {
   fi
   local status
   status="$(bash "$INSTALLED_CLI" status 2>/dev/null || true)"
+  if printf '%s\n' "$status" | grep -q '^session=paused$'; then
+    return
+  fi
   if [ "$needs_apply" = true ] || ! printf '%s\n' "$status" | grep -q '^session=active$'; then
     apply_skin
   fi
@@ -101,8 +105,12 @@ case "$COMMAND" in
     ;;
   theme)
     [ -n "${1:-}" ] || die "theme id is required"
+    [ -x "$INSTALLED_MENU" ] || die "runtime is not installed"
+    bash "$INSTALLED_MENU" theme "$1"
+    ;;
+  original)
     [ -x "$INSTALLED_CLI" ] || die "runtime is not installed"
-    bash "$INSTALLED_CLI" theme "$1"
+    bash "$INSTALLED_CLI" pause
     ;;
   verify)
     verify_skin "$@"
