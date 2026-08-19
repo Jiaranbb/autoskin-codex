@@ -52,6 +52,20 @@ if grep -Eq 'aside\.app-shell-left-panel|main\.main-surface|group\\/home-suggest
 fi
 grep -q 'adapter.confidence >= 0.65' "$ROOT/scripts/injector.mjs" || \
   fail "renderer verification does not enforce adapter confidence"
+grep -q 'composerLooksLocal' "$ROOT/scripts/injector.mjs" || \
+  fail "renderer verification accepts a whole-page composer marker"
+grep -q 'candidate.classList.remove("dream-composer-surface")' "$ROOT/assets/renderer-inject.js" || \
+  fail "semantic adapter does not clear its previous composer paint before rescoring"
+grep -q 'surfaceKind === "utility"' "$ROOT/assets/renderer-inject.js" || \
+  fail "semantic adapter does not distinguish utility pages from conversations"
+grep -q 'sidebar?.parentElement?.children' "$ROOT/assets/renderer-inject.js" || \
+  fail "semantic adapter cannot resolve the classless Settings content pane"
+grep -q 'dream-sidebar::before' "$ROOT/styles/dream/style.css" || \
+  fail "history column is not rendered as a complete themed surface"
+grep -q 'noHomeComposerOverlap' "$ROOT/scripts/live-ui-audit.mjs" || \
+  fail "live UI audit does not check home/composer overlap"
+grep -q 'sidebarHit' "$ROOT/scripts/live-ui-audit.mjs" || \
+  fail "live UI audit does not hit-test the themed history column"
 
 echo "Checking that the public runtime has no bundled fallback themes..."
 if "$NODE_BIN" "$ROOT/scripts/injector.mjs" --themes >"$TMP_ROOT/themes.json" 2>"$TMP_ROOT/themes.error"; then

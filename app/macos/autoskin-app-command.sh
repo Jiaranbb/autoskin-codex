@@ -40,15 +40,17 @@ apply_skin() {
 ensure_skin() {
   require_resources
   local bundle_version installed_version=""
+  local needs_apply=false
   bundle_version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_INFO")"
   [ ! -f "$APP_STATE_ROOT/app-runtime-version" ] || installed_version="$(<"$APP_STATE_ROOT/app-runtime-version")"
   if [ ! -x "$INSTALLED_CLI" ] || [ "$installed_version" != "$bundle_version" ] || \
      [ ! -f "$HOME/Library/Application Support/CodexDreamSkin/themes-private/chiikawa-summer/theme.json" ]; then
     install_skin
+    needs_apply=true
   fi
   local status
   status="$(bash "$INSTALLED_CLI" status 2>/dev/null || true)"
-  if ! printf '%s\n' "$status" | grep -q '^session=active$'; then
+  if [ "$needs_apply" = true ] || ! printf '%s\n' "$status" | grep -q '^session=active$'; then
     apply_skin
   fi
 }

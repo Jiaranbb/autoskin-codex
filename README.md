@@ -274,6 +274,16 @@ python3 scripts/install_theme.py /absolute/path/my-theme --apply
 bash scripts/autoskin-macos.sh verify
 ```
 
+真实 Codex UI 回归（不会发送消息或修改会话）可在任一当前页面运行：
+
+```bash
+node scripts/live-ui-audit.mjs --port 9335
+```
+
+审计会临时覆盖 `1708×977`、`1180×820`、`900×760`、`720×700` 四种视口，
+分别验证 fullscreen/banner 布局，并在结束后恢复原布局和窗口状态。发布前应至少在 Work 首页、
+Chat 首页、一个有内容的会话、Settings、Plugins、Sites 和 Scheduled 各运行一次。
+
 完整 schema、预览验收和运行时说明见：
 
 - [`skill/references/theme-schema.md`](skill/references/theme-schema.md)

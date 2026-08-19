@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 
@@ -17,6 +18,7 @@ SCRIPTS = ROOT / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 from theme_core import EXAMPLE_ROOT, build_theme, validate_theme  # noqa: E402
+from install_theme import render_native_config  # noqa: E402
 
 
 class ThemeValidationTests(unittest.TestCase):
@@ -95,6 +97,29 @@ class ThemeValidationTests(unittest.TestCase):
         self.write_manifest(manifest)
         _, result = validate_theme(self.theme)
         self.assertTrue(any("{{project}} exactly once" in error for error in result.errors), result.errors)
+
+    def test_native_theme_replaces_inline_chrome_theme_without_duplicate_key(self) -> None:
+        source = """[desktop]
+appearanceTheme = "dark"
+appearanceLightChromeTheme = { accent = "#123456", surface = "#FFFFFF" }
+appearanceDarkChromeTheme = { accent = "#654321", surface = "#000000" }
+
+[desktop.open-in-target-preferences]
+global = "cursor"
+"""
+        native = {
+            "appearance": "light",
+            "accent": "#16ABC4",
+            "surface": "#F8FDFE",
+            "ink": "#184F5F",
+            "contrast": 64,
+            "opaqueWindows": True,
+        }
+        rendered = render_native_config(source, native)
+        parsed = tomllib.loads(rendered)
+        self.assertEqual(parsed["desktop"]["appearanceLightChromeTheme"]["accent"], "#16ABC4")
+        self.assertEqual(parsed["desktop"]["appearanceDarkChromeTheme"]["accent"], "#654321")
+        self.assertEqual(render_native_config(rendered, native), rendered)
 
 
 if __name__ == "__main__":

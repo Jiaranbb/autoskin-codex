@@ -9,8 +9,8 @@
   const INJECTION_ID = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const LAYOUT_STORAGE_KEY = "codex-dream-skin.layout";
   const THEME_STORAGE_KEY = "codex-dream-skin.theme";
-  const STYLE_VERSION = "10";
-  const ADAPTER_VERSION = "semantic-1";
+  const STYLE_VERSION = "13";
+  const ADAPTER_VERSION = "semantic-3";
   const LAYOUTS = new Set(["banner", "fullscreen"]);
   // Sidebar "new task" row gets a marker class so the structure CSS can restyle
   // it as a capsule. Text matching only; the real button stays fully native.
@@ -133,6 +133,18 @@
     const projectButton = hero?.querySelector("button");
     if (hero && projectButton && content.heroTitle?.includes("{{project}}")) {
       const [before, after] = content.heroTitle.split("{{project}}", 2);
+      // The current native Work heading keeps its sentence-ending question
+      // mark inside the project button (for example `my-project?`). A themed
+      // sentence supplies its own punctuation after {{project}}, so leaving
+      // the native suffix produces a visible `? ... ？`. Strip only this known
+      // sentence suffix; the interactive project button itself is preserved.
+      if (/[?？]/.test(after)) {
+        const projectTextNodes = textNodesOutside(projectButton, null);
+        const lastProjectText = projectTextNodes.at(-1);
+        if (lastProjectText && /[?？]\s*$/.test(lastProjectText.nodeValue || "")) {
+          lastProjectText.nodeValue = (lastProjectText.nodeValue || "").replace(/[?？]\s*$/, "");
+        }
+      }
       const nodes = textNodesOutside(hero, projectButton);
       const beforeNodes = nodes.filter((node) => node.compareDocumentPosition(projectButton) & Node.DOCUMENT_POSITION_FOLLOWING);
       const afterNodes = nodes.filter((node) => node.compareDocumentPosition(projectButton) & Node.DOCUMENT_POSITION_PRECEDING);
@@ -184,7 +196,7 @@
       layer.dataset.theme = activeTheme;
     }
     layer.querySelectorAll(".dream-autoskin-decoration").forEach((node) => {
-      node.hidden = !(node.dataset.surface === "all" || node.dataset.surface === surface);
+      node.hidden = !surface || !(node.dataset.surface === "all" || node.dataset.surface === surface);
     });
   };
 
@@ -278,6 +290,10 @@
       ...document.querySelectorAll("main"),
       ...document.querySelectorAll('[role="main"]'),
       document.querySelector(".main-surface"),
+      // Settings replaces the normal <main> with a sibling application pane.
+      // The sidebar/main sibling relationship and geometry survive generated
+      // class-name changes, so use that as the semantic fallback.
+      ...[...(sidebar?.parentElement?.children ?? [])].filter((node) => node !== sidebar),
     ]).filter((node) => isVisibleInViewport(node) && !sidebar?.contains(node));
     const scored = candidates.map((node) => {
       const rect = node.getBoundingClientRect();
@@ -285,6 +301,7 @@
       if (node.tagName === "MAIN") score += 2;
       if (rect.width > innerWidth * 0.45 && rect.height > innerHeight * 0.55) score += 3;
       if (rect.left >= (sidebar?.getBoundingClientRect().right ?? 0) - 4) score += 1;
+      if (sidebar && node.parentElement === sidebar.parentElement) score += 2;
       if (classText(node).includes("main-surface")) score += 1;
       return { node, score, area: rect.width * rect.height };
     }).sort((left, right) => right.score - left.score || right.area - left.area);
@@ -365,7 +382,14 @@
       const style = getComputedStyle(node);
       const rounded = Number.parseFloat(style.borderTopLeftRadius) >= 16;
       const painted = style.backgroundColor !== "rgba(0, 0, 0, 0)" || style.backgroundImage !== "none";
-      if (rect.width >= 240 && rect.height >= 36 && rounded && painted) surface = node;
+      // Choose the nearest visual surface. Walking all the way out and keeping
+      // the last match creates a feedback loop: once our CSS paints a wrongly
+      // marked ancestor, the next adapter pass promotes an even larger node
+      // (eventually the whole <main>) to composer.
+      if (rect.width >= 240 && rect.height >= 36 && rounded && painted) {
+        surface = node;
+        break;
+      }
       if (node === form) break;
       node = node.parentElement;
     }
@@ -453,15 +477,28 @@
     if (chatHome) chatHome.classList.add("dream-chat-home");
     if (homeContent) homeContent.classList.add("dream-home-content");
 
+    // Remove our previous paint before resolving again. Otherwise computed
+    // style would treat the marker's own skin as a native composer signal.
+    document.querySelectorAll(".dream-composer-surface").forEach((candidate) => {
+      candidate.classList.remove("dream-composer-surface");
+    });
     const composer = findComposerSurface(activeHome || document);
-    adapterState.signals.composer = composer ? "semantic-editor" : "missing";
+    const surfaceKind = workHome ? "work-home" : chatHome ? "chat-home" :
+      composer ? "conversation" : "utility";
+    adapterState.signals.surface = surfaceKind;
+    adapterState.signals.composer = composer ? "semantic-editor" :
+      surfaceKind === "utility" ? "not-applicable" : "missing";
     adapterState.confidence = Math.min(1,
-      (sidePanel ? 0.25 : 0) + (shellMain ? 0.2 : 0) + (composer ? 0.3 : 0) +
-      (activeHome ? 0.1 : 0) + (workHome ? ((suggestions ? 0.1 : 0) + (heroSource ? 0.05 : 0)) : 0.15)
+      (sidePanel ? 0.25 : (!sidePanel && innerWidth < 800 ? 0.2 : 0)) +
+      (shellMain ? 0.2 : 0) + (composer ? 0.3 : 0) +
+      (activeHome ? 0.1 : 0) +
+      (workHome ? ((suggestions ? 0.1 : 0) + (heroSource ? 0.05 : 0)) :
+        chatHome ? 0.15 : surfaceKind === "utility" ? 0.25 : 0.15)
     );
 
     if (!shellMain || !document.body) return;
     shellMain.classList.toggle("dream-home-shell", Boolean(activeHome));
+    shellMain.classList.toggle("dream-conversation-shell", surfaceKind === "conversation");
     document.getElementById(LEGACY_CONTROLS_ID)?.remove();
     let chrome = document.getElementById(CHROME_ID);
     if (!chrome || chrome.parentElement !== document.body || chrome.dataset.dreamInjection !== INJECTION_ID) {
@@ -513,7 +550,7 @@
 
     syncThemeMeta();
     syncThemeContent(workHome);
-    syncDecorations(chrome, workHome ? "home" : "chat");
+    syncDecorations(chrome, workHome ? "home" : surfaceKind === "conversation" ? "chat" : null);
     const shellBox = shellMain.getBoundingClientRect();
     chrome.style.left = `${Math.round(shellBox.left)}px`;
     chrome.style.top = `${Math.round(shellBox.top)}px`;
@@ -530,6 +567,7 @@
       chrome.style.removeProperty("--dream-composer-top");
     }
     chrome.classList.toggle("dream-home-shell", Boolean(activeHome));
+    chrome.classList.toggle("dream-conversation-shell", surfaceKind === "conversation");
   };
 
   const cleanup = () => {
@@ -549,6 +587,7 @@
     document.querySelectorAll(".dream-chat-home").forEach((node) => node.classList.remove("dream-chat-home"));
     document.querySelectorAll(".dream-home-content").forEach((node) => node.classList.remove("dream-home-content"));
     document.querySelectorAll(".dream-home-shell").forEach((node) => node.classList.remove("dream-home-shell"));
+    document.querySelectorAll(".dream-conversation-shell").forEach((node) => node.classList.remove("dream-conversation-shell"));
     document.querySelectorAll(".dream-new-task").forEach((node) => node.classList.remove("dream-new-task"));
     document.querySelectorAll(".dream-composer-surface").forEach((node) => node.classList.remove("dream-composer-surface"));
     for (const marker of ["dream-sidebar", "dream-main-surface", "dream-suggestions", "dream-hero-source"]) {
@@ -598,12 +637,12 @@
     get adapter() {
       return { version: adapterState.version, confidence: adapterState.confidence, signals: { ...adapterState.signals } };
     },
-    version: "2.5.0"
+    version: "2.9.0"
   };
   ensure();
   return {
     installed: true,
-    version: "2.5.0",
+    version: "2.9.0",
     layout: activeLayout,
     theme: activeTheme,
     themes: [...THEME_ORDER],

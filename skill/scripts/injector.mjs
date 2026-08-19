@@ -725,6 +725,8 @@ async function verifySession(session) {
     const composer = firstVisible('.composer-surface-chrome, .dream-composer-surface');
     const sidebar = firstVisible('.dream-sidebar');
     const state = window.__CODEX_DREAM_SKIN_STATE__;
+    const surfaceKind = state?.adapter?.signals?.surface ??
+      (homeKind ? homeKind + '-home' : composer ? 'conversation' : 'utility');
     const result = {
       installed: document.documentElement.classList.contains('codex-dream-skin'),
       version: state?.version ?? null,
@@ -738,6 +740,7 @@ async function verifySession(session) {
       chromePointerEvents: getComputedStyle(document.getElementById('codex-dream-skin-chrome') || document.body).pointerEvents,
       homePresent: Boolean(home),
       homeKind,
+      surfaceKind,
       suggestionsPresent: Boolean(suggestions),
       hero: box(heroSource || homeContent?.firstElementChild?.firstElementChild),
       chatCanvas: chatHome ? getComputedStyle(chatHome, '::before').backgroundImage : null,
@@ -750,12 +753,17 @@ async function verifySession(session) {
         y: document.documentElement.scrollHeight > document.documentElement.clientHeight,
       },
     };
+    const composerLooksLocal = Boolean(result.composer) &&
+      result.composer.height < result.viewport.height * 0.45 &&
+      result.composer.width * result.composer.height <
+        result.viewport.width * result.viewport.height * 0.5;
     result.pass = result.installed && result.stylePresent && result.chromePresent &&
       Array.isArray(result.themes) && result.themes.length > 0 && result.themes.includes(result.theme) &&
       ['banner', 'fullscreen'].includes(result.layout) &&
       result.adapter?.version && result.adapter.confidence >= 0.65 &&
       !result.legacyControlsPresent &&
-      result.chromePointerEvents === 'none' && Boolean(result.composer) && Boolean(result.sidebar) &&
+      result.chromePointerEvents === 'none' &&
+      (result.surfaceKind === 'utility' || composerLooksLocal) && Boolean(result.sidebar) &&
       (!result.homePresent ||
         (result.homeKind === 'chat' && result.chatCanvas && result.chatCanvas !== 'none') ||
         (result.homeKind === 'work' && Boolean(result.hero) &&

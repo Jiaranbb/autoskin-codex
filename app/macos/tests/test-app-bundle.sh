@@ -11,6 +11,7 @@ RESOURCES="$APP/Contents/Resources"
 
 [ -x "$APP/Contents/MacOS/AutoSkin" ]
 [ -x "$RESOURCES/autoskin-app-command.sh" ]
+grep -q 'needs_apply=true' "$RESOURCES/autoskin-app-command.sh"
 [ -f "$RESOURCES/AutoSkinRuntime/examples/chiikawa-summer/theme.json" ]
 [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist")" = "app.autoskin.codex" ]
 
