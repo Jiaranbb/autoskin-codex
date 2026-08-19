@@ -132,14 +132,18 @@ const auditExpression = `(() => {
   const mainNode = first('.dream-main-surface');
   const main = box(mainNode);
   const hero = box(workHome ? first('.dream-hero-source', workHome) : null);
-  const cards = workHome ? [...workHome.querySelectorAll('.dream-suggestions button')]
+  const suggestionsNode = workHome ? first('.dream-suggestions', workHome) : null;
+  const cards = suggestionsNode ? [...suggestionsNode.querySelectorAll('button')]
     .filter(visible).map(box) : [];
   // Current Codex releases no longer expose article/message-author markers on
   // Chat conversations. Detect rendered prose semantically and exclude native
   // chrome/editor regions instead of depending on generated Markdown classes.
   const messages = mainNode ? [...mainNode.querySelectorAll('p, li, pre, blockquote, h1, h2, h3')]
     .filter((node) => visible(node) && !composerNode?.contains(node) && !node.closest('header')) : [];
+  const modeButtons = [...document.querySelectorAll('button')].filter((node) =>
+    visible(node) && ['Chat', 'Work'].includes((node.innerText || '').trim()));
   const measured = [hero, ...cards, composer].filter(Boolean);
+  const usagePercent = Number(composerNode?.dataset.dreamUsagePercent);
   const checks = {
     skinInstalled: document.documentElement.classList.contains('codex-dream-skin'),
     adapterConfident: Boolean(state?.adapter?.version) && state.adapter.confidence >= 0.65,
@@ -147,6 +151,13 @@ const auditExpression = `(() => {
     sidebarFoundOrCollapsed: Boolean(sidebar) || innerWidth < 800,
     sidebarHit: !sidebar || sidebarNode.contains(document.elementFromPoint(
       sidebar.x + sidebar.width / 2, Math.min(sidebar.bottom - 12, sidebar.y + sidebar.height / 2))),
+    homeModeToggleHit: modeButtons.every((button) => {
+      const rect = button.getBoundingClientRect();
+      return button.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
+    }),
+    usageGauge: surface === 'utility' || (Number.isFinite(usagePercent) &&
+      usagePercent >= 0 && usagePercent <= 100 &&
+      getComputedStyle(composerNode, '::before').backgroundImage.includes('conic-gradient')),
     composerLocal: surface === 'utility' || (Boolean(composer) && composer.height < innerHeight * .45 &&
       composer.width * composer.height < innerWidth * innerHeight * .5),
     composerHit: surface === 'utility' || Boolean(composerNode && composer &&
@@ -157,7 +168,8 @@ const auditExpression = `(() => {
       rect.right <= innerWidth + 1 && rect.bottom <= innerHeight + 1),
     noHomeComposerOverlap: cards.every((card) => intersection(card, composer) === 0) &&
       intersection(hero, composer) === 0,
-    surfaceComplete: surface === 'work-home' ? Boolean(hero) && cards.length >= 2 && cards.length <= 4 :
+    surfaceComplete: surface === 'work-home' ? Boolean(hero) &&
+      (!suggestionsNode || (cards.length >= 2 && cards.length <= 4)) :
       surface === 'chat-home' ? getComputedStyle(chatHome, '::before').backgroundImage !== 'none' : true,
     conversationContentVisible: surface !== 'conversation' || messages.length > 0,
     utilityHasNoConversationArt: surface !== 'utility' ||
@@ -170,6 +182,7 @@ const auditExpression = `(() => {
     adapter: state?.adapter ?? null,
     viewport: { width: innerWidth, height: innerHeight },
     geometry: { main, sidebar, hero, cards, composer, visibleMessages: messages.length },
+    usagePercent: Number.isFinite(usagePercent) ? usagePercent : null,
     checks,
     pass: Object.values(checks).every(Boolean),
   };
@@ -194,7 +207,9 @@ try {
       });
       await session.evaluate(`(() => {
         const state = window.__CODEX_DREAM_SKIN_STATE__;
-        state.setLayout(${JSON.stringify(layout)}, false);
+        // Persist only for the duration of the audit so a concurrently running
+        // AutoSkin watcher cannot re-inject the user's stored layout mid-matrix.
+        state.setLayout(${JSON.stringify(layout)}, true);
         state.ensure();
         return true;
       })()`);
@@ -207,7 +222,7 @@ try {
   if (original.layout) {
     await session.evaluate(`(() => {
       const state = window.__CODEX_DREAM_SKIN_STATE__;
-      state.setLayout(${JSON.stringify(original.layout)}, false);
+      state.setLayout(${JSON.stringify(original.layout)}, true);
       state.ensure();
       return true;
     })()`);

@@ -66,6 +66,17 @@ grep -q 'noHomeComposerOverlap' "$ROOT/scripts/live-ui-audit.mjs" || \
   fail "live UI audit does not check home/composer overlap"
 grep -q 'sidebarHit' "$ROOT/scripts/live-ui-audit.mjs" || \
   fail "live UI audit does not hit-test the themed history column"
+grep -q 'homeModeToggleHit' "$ROOT/scripts/live-ui-audit.mjs" || \
+  fail "live UI audit does not hit-test the Chat/Work mode toggle"
+if grep -q 'dream-main-surface > \*' "$ROOT/styles/dream/style.css"; then
+  fail "theme CSS overrides every main child z-index and can block titlebar controls"
+fi
+grep -q 'const localSurface' "$ROOT/assets/renderer-inject.js" || \
+  fail "composer resolver can still promote a whole-page painted ancestor"
+grep -q 'remainingPercent' "$ROOT/assets/renderer-inject.js" || \
+  fail "usage gauge does not consume Codex remaining quota semantically"
+grep -q 'usageGauge' "$ROOT/scripts/live-ui-audit.mjs" || \
+  fail "live UI audit does not verify the composer usage gauge"
 
 echo "Checking that the public runtime has no bundled fallback themes..."
 if "$NODE_BIN" "$ROOT/scripts/injector.mjs" --themes >"$TMP_ROOT/themes.json" 2>"$TMP_ROOT/themes.error"; then

@@ -9,7 +9,8 @@
   const INJECTION_ID = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const LAYOUT_STORAGE_KEY = "codex-dream-skin.layout";
   const THEME_STORAGE_KEY = "codex-dream-skin.theme";
-  const STYLE_VERSION = "13";
+  const USAGE_STORAGE_KEY = "codex-dream-skin.usage-percent";
+  const STYLE_VERSION = "15";
   const ADAPTER_VERSION = "semantic-3";
   const LAYOUTS = new Set(["banner", "fullscreen"]);
   // Sidebar "new task" row gets a marker class so the structure CSS can restyle
@@ -88,6 +89,65 @@
     return THEMES.has(previous?.theme) ? previous.theme : DEFAULT_THEME;
   };
   let activeTheme = readTheme();
+
+  const parseUsagePercent = (value) => {
+    const match = /(?:^|\D)(100|[1-9]?\d)\s*%/.exec(String(value ?? ""));
+    return match ? Number(match[1]) : null;
+  };
+
+  let usagePercent = Number.isFinite(previous?.usagePercent) ? previous.usagePercent : null;
+  if (!Number.isFinite(usagePercent)) {
+    try { usagePercent = parseUsagePercent(localStorage.getItem(USAGE_STORAGE_KEY)); } catch {}
+  }
+
+  // Search a small React-props neighborhood around the native profile button.
+  // The component/minified names and ancestor depth may change across builds;
+  // the semantic `remainingPercent` value and localized Usage DOM are the only
+  // signals we consume. No menu is opened and no native action is triggered.
+  const findUsageValue = (root) => {
+    if (!root || (typeof root !== "object" && typeof root !== "function")) return null;
+    const seen = new WeakSet();
+    const stack = [{ value: root, depth: 0 }];
+    let visited = 0;
+    while (stack.length && visited < 2400) {
+      const { value, depth } = stack.pop();
+      visited += 1;
+      if (!value || (typeof value !== "object" && typeof value !== "function")) continue;
+      if (seen.has(value) || value instanceof Node) continue;
+      seen.add(value);
+      const direct = parseUsagePercent(value.remainingPercent);
+      if (direct !== null) return direct;
+      if (depth >= 13) continue;
+      for (const key of Object.keys(value)) {
+        if (["_owner", "_store", "return", "child", "sibling", "stateNode", "alternate"].includes(key)) continue;
+        let child;
+        try { child = value[key]; } catch { continue; }
+        if (child && (typeof child === "object" || typeof child === "function")) {
+          stack.push({ value: child, depth: depth + 1 });
+        }
+      }
+    }
+    return null;
+  };
+
+  const resolveUsagePercent = (sidePanel) => {
+    const usageItem = [...document.querySelectorAll('[role="menuitem"]')].find((node) =>
+      /usage|用量|额度/i.test(node.textContent || "") && parseUsagePercent(node.textContent) !== null
+    );
+    const visibleValue = parseUsagePercent(usageItem?.textContent);
+    if (visibleValue !== null) return visibleValue;
+
+    const profileButton = sidePanel?.querySelector(
+      'button[aria-label="Open profile menu"], button[aria-label="打开个人资料菜单"]'
+    );
+    const fiberKey = Object.keys(profileButton ?? {}).find((key) => key.startsWith("__reactFiber$"));
+    let fiber = fiberKey ? profileButton[fiberKey] : null;
+    for (let level = 0; fiber && level < 42; level += 1, fiber = fiber.return) {
+      const found = findUsageValue(fiber.memoizedProps);
+      if (found !== null) return found;
+    }
+    return Number.isFinite(usagePercent) ? usagePercent : null;
+  };
 
   const syncThemeMeta = () => {
     const meta = THEME_META[activeTheme];
@@ -382,11 +442,14 @@
       const style = getComputedStyle(node);
       const rounded = Number.parseFloat(style.borderTopLeftRadius) >= 16;
       const painted = style.backgroundColor !== "rgba(0, 0, 0, 0)" || style.backgroundImage !== "none";
+      const minimumWidth = Math.min(240, innerWidth * 0.2);
+      const localSurface = rect.height < innerHeight * 0.45 &&
+        rect.width * rect.height < innerWidth * innerHeight * 0.5;
       // Choose the nearest visual surface. Walking all the way out and keeping
       // the last match creates a feedback loop: once our CSS paints a wrongly
       // marked ancestor, the next adapter pass promotes an even larger node
       // (eventually the whole <main>) to composer.
-      if (rect.width >= 240 && rect.height >= 36 && rounded && painted) {
+      if (rect.width >= minimumWidth && rect.height >= 36 && localSurface && rounded && painted) {
         surface = node;
         break;
       }
@@ -481,8 +544,22 @@
     // style would treat the marker's own skin as a native composer signal.
     document.querySelectorAll(".dream-composer-surface").forEach((candidate) => {
       candidate.classList.remove("dream-composer-surface");
+      delete candidate.dataset.dreamUsagePercent;
+      candidate.style.removeProperty("--dream-usage-percent");
+      candidate.style.removeProperty("--dream-usage-label");
     });
     const composer = findComposerSurface(activeHome || document);
+    const resolvedUsage = resolveUsagePercent(sidePanel);
+    if (Number.isFinite(resolvedUsage)) {
+      usagePercent = Math.max(0, Math.min(100, Math.round(resolvedUsage)));
+      try { localStorage.setItem(USAGE_STORAGE_KEY, `${usagePercent}%`); } catch {}
+    }
+    if (composer) {
+      const label = Number.isFinite(usagePercent) ? `${usagePercent}%` : "··";
+      composer.dataset.dreamUsagePercent = Number.isFinite(usagePercent) ? String(usagePercent) : "";
+      composer.style.setProperty("--dream-usage-percent", Number.isFinite(usagePercent) ? String(usagePercent) : "0");
+      composer.style.setProperty("--dream-usage-label", `"${label}"`);
+    }
     const surfaceKind = workHome ? "work-home" : chatHome ? "chat-home" :
       composer ? "conversation" : "utility";
     adapterState.signals.surface = surfaceKind;
@@ -589,7 +666,12 @@
     document.querySelectorAll(".dream-home-shell").forEach((node) => node.classList.remove("dream-home-shell"));
     document.querySelectorAll(".dream-conversation-shell").forEach((node) => node.classList.remove("dream-conversation-shell"));
     document.querySelectorAll(".dream-new-task").forEach((node) => node.classList.remove("dream-new-task"));
-    document.querySelectorAll(".dream-composer-surface").forEach((node) => node.classList.remove("dream-composer-surface"));
+    document.querySelectorAll(".dream-composer-surface").forEach((node) => {
+      node.classList.remove("dream-composer-surface");
+      delete node.dataset.dreamUsagePercent;
+      node.style.removeProperty("--dream-usage-percent");
+      node.style.removeProperty("--dream-usage-label");
+    });
     for (const marker of ["dream-sidebar", "dream-main-surface", "dream-suggestions", "dream-hero-source"]) {
       document.querySelectorAll(`.${marker}`).forEach((node) => node.classList.remove(marker));
     }
@@ -637,12 +719,13 @@
     get adapter() {
       return { version: adapterState.version, confidence: adapterState.confidence, signals: { ...adapterState.signals } };
     },
-    version: "2.9.0"
+    get usagePercent() { return usagePercent; },
+    version: "3.2.0"
   };
   ensure();
   return {
     installed: true,
-    version: "2.9.0",
+    version: "3.2.0",
     layout: activeLayout,
     theme: activeTheme,
     themes: [...THEME_ORDER],
