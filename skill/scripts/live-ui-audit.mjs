@@ -168,9 +168,9 @@ const auditExpression = `(() => {
       getComputedStyle(usageOrbNode).borderRadius === '50%' &&
       !usageOrbNode.hasAttribute('title') &&
       usageOrbNode.textContent.trim() === '' && /% remaining.*Resets/.test(usageOrbNode.dataset.tooltip || '') &&
-      Boolean(usageOrb && composer && usageOrb.width === 18 && usageOrb.height === 18 &&
-        Math.abs(usageOrb.x - (composer.x - 9)) <= 2 &&
-        Math.abs(usageOrb.y - (composer.y - 9)) <= 2)),
+      Boolean(usageOrb && composer && usageOrb.width === 22 && usageOrb.height === 22 &&
+        Math.abs(usageOrb.x - (composer.x - 11)) <= 2 &&
+        Math.abs(usageOrb.y - (composer.y - 11)) <= 2)),
     composerLocal: surface === 'utility' || (Boolean(composer) && composer.height < innerHeight * .45 &&
       composer.width * composer.height < innerWidth * innerHeight * .5),
     composerHit: surface === 'utility' || Boolean(composerNode && composer &&

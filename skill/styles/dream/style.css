@@ -348,40 +348,28 @@ html.codex-dream-skin .dream-main-surface > header.app-header-tint {
 }
 #codex-dream-skin-chrome.dream-home-shell .dream-signature { display: block; }
 
-/* Original compact Chiikawa water-drop badge with a subtle vertical quota
-   fill. It contains no visible text; exact data appears on hover. */
+/* Compact Chiikawa water-drop badge. Remaining quota is blue from the bottom:
+   100% is fully blue and 0% is fully white. Exact data appears on hover. */
 .dream-usage-orb {
-  --dream-orb-deep: #056f89;
-  --dream-orb-bright: #16b8cf;
   position: absolute;
-  left: -9px;
-  top: -9px;
+  left: -11px;
+  top: -11px;
   z-index: 24;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   box-sizing: border-box;
   display: block;
-  border: 1px solid rgba(255,255,255,.88);
+  border: 1.5px solid rgba(36,163,188,.88);
   border-radius: 50%;
   outline: none;
   cursor: help;
   pointer-events: auto;
   background:
-    radial-gradient(circle at 32% 22%, rgba(255,255,255,.34), transparent 28%),
-    linear-gradient(160deg, var(--dream-orb-bright), var(--dream-orb-deep));
+    radial-gradient(circle at 34% 24%, #fff 0 8%, transparent 24%),
+    linear-gradient(160deg, #fff, #edf9fb);
   box-shadow:
     0 2px 7px rgba(8,100,126,.28),
-    0 0 0 1px rgba(63,189,210,.48);
-}
-
-.dream-usage-orb[data-level="medium"] {
-  --dream-orb-deep: #48679b;
-  --dream-orb-bright: #7886cf;
-}
-
-.dream-usage-orb[data-level="low"] {
-  --dream-orb-deep: #bd5278;
-  --dream-orb-bright: #f58ba4;
+    0 0 0 1px rgba(255,255,255,.78);
 }
 
 .dream-usage-orb[data-level="unknown"] { opacity: .62; }
@@ -390,8 +378,8 @@ html.codex-dream-skin .dream-main-surface > header.app-header-tint {
   content: "";
   position: absolute;
   z-index: 2;
-  left: 4px;
-  top: 3px;
+  left: 5px;
+  top: 4px;
   width: 3px;
   height: 3px;
   border-radius: 50%;
@@ -414,20 +402,18 @@ html.codex-dream-skin .dream-main-surface > header.app-header-tint {
   right: 0;
   bottom: 0;
   height: calc(var(--dream-usage-percent, 0) * 1%);
-  background: linear-gradient(180deg,
-    rgba(255,255,255,.98) 0 2px,
-    rgba(229,253,255,.96) 3px,
-    rgba(151,240,247,.91) 46%,
-    rgba(54,207,222,.88) 100%);
-  box-shadow: 0 -1px 3px rgba(255,255,255,.94);
+  background:
+    radial-gradient(circle at 30% 18%, rgba(255,255,255,.26), transparent 28%),
+    linear-gradient(180deg, #22bdd1, #1298b5);
+  box-shadow: 0 -1px 2px rgba(36,163,188,.42);
   transition: height .3s ease;
 }
 
 .dream-usage-orb::after {
   content: attr(data-tooltip);
   position: absolute;
-  left: 26px;
-  top: -6px;
+  left: 30px;
+  top: -4px;
   z-index: 80;
   width: max-content;
   max-width: min(330px, calc(100vw - 90px));
