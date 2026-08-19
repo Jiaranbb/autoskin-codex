@@ -1,14 +1,18 @@
 # AutoSkin Codex
 
-**Deeply customize Codex desktop themes—from multi-surface previews to reversible installation.**
+**A standalone Codex theme manager—from multi-surface previews to reversible installation.**
 
 [中文说明](README.md) · [Preview](#preview) · [Install](#install) ·
 [Support](SUPPORT.md) · [Issues](https://github.com/Jiaranbb/autoskin-codex/issues)
 
-AutoSkin Codex is a Codex Skill for authoring, previewing, validating, packaging, installing, and
-recovering desktop themes. It rebuilds the theme schema, preview workflow, and installer around the
-safe local renderer-injection approach established by
+AutoSkin Codex is a standalone macOS menu-bar app for installing, switching, pausing, recovering,
+and verifying Codex desktop themes. It rebuilds the theme schema, preview workflow, and installer
+around the safe local renderer-injection approach established by
 [`Finderchangchang/codex-autoskin`](https://github.com/Finderchangchang/codex-autoskin).
+
+The `skill/` directory is now an optional agent adapter and cross-platform toolbox, not the product
+boundary. `AutoSkin.app` embeds the local runtime and the Chiikawa Summer example, so ordinary use
+does not depend on installing a Codex Skill.
 
 It keeps source images as ordinary files, separates official Codex appearance values from runtime
 styling, and previews fullscreen home, Banner, and new-chat surfaces independently before touching
@@ -26,7 +30,25 @@ The sidebar labels in this real installed screenshot have been obscured. They ar
 
 ## Install
 
-Ask Codex to install the Skill from this repository, or use the built-in installer:
+Build and install the standalone macOS app:
+
+```bash
+bash scripts/build-macos-app.sh
+bash scripts/install-macos-app.sh
+open "$HOME/Applications/AutoSkin.app"
+```
+
+No initialization command is required after first launch. The app detects Codex, the installed
+runtime generation, and local themes, installs or updates missing pieces, and applies the skin.
+Its menu-bar palette dynamically lists every installed theme and layout. The status row also shows
+DOM-adapter confidence.
+
+After a Codex GUI update, the runtime re-discovers the visible DOM using semantic roles,
+accessibility attributes, geometry, and multiple compatibility signals. Core styles target stable
+AutoSkin markers instead of Codex build-time class names. Low-confidence matches enter `stale`
+recovery rather than silently styling the wrong surface.
+
+For natural-language theme authoring, optionally install the Skill adapter:
 
 ```bash
 python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \

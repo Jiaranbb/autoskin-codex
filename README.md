@@ -1,8 +1,9 @@
 # AutoSkin Codex
 
-**深度个性化订制 Codex 桌面皮肤：从主题制作、多界面预览到安全安装与恢复。**
+**独立的 Codex 桌面皮肤管理 App：从主题制作、多界面预览到安全安装与恢复。**
 
-[![Codex Skill](https://img.shields.io/badge/Codex-Skill-16ABC4)](#30-秒开始)
+[![macOS App](https://img.shields.io/badge/macOS-AutoSkin.app-16ABC4)](#30-秒开始)
+[![Optional Skill](https://img.shields.io/badge/Codex-Skill%20adapter-6A8790)](#可选skill-适配层)
 [![macOS tested](https://img.shields.io/badge/macOS-tested-16ABC4)](#支持的平台与依赖)
 [![Windows scripts](https://img.shields.io/badge/Windows-scripts%20included-6A8790)](#支持的平台与依赖)
 [![Publisher](https://img.shields.io/badge/publisher-Jiaranbb-F08FA9)](https://github.com/Jiaranbb)
@@ -13,10 +14,14 @@
 
 发布者：[Jiaranbb](https://github.com/Jiaranbb)
 
-AutoSkin Codex 是一个用于深度定制 Codex 桌面应用的主题皮肤制作与安装 Skill。项目基于
+AutoSkin Codex 是一个独立的 macOS 菜单栏 App，负责安装、切换、暂停、恢复和验证 Codex
+桌面皮肤。项目基于
 [`Finderchangchang/codex-autoskin`](https://github.com/Finderchangchang/codex-autoskin)
 的安全换肤思路进行了重构和优化：重新设计主题 schema、预览器和安装流程，把图片素材、
 语义配置、生成文件与本地运行时分开管理。
+
+仓库中的 `skill/` 现在是可选的 Agent 适配层和跨平台工具箱，不再承担产品身份。App Bundle
+内置经过验证的本地运行时与 Chiikawa Summer 示例，因此日常安装和控制不依赖 skill。
 
 AutoSkin Codex 对实际界面中的多个部位提供深度个性化订制。顶部 Banner、标题栏、侧栏、
 建议卡片、输入框、图标、文案、裁切和透明度都可以分别调整，并由 Agent 协助完成主题制作
@@ -52,12 +57,31 @@ AutoSkin Codex 对实际界面中的多个部位提供深度个性化订制。�
 
 ## 30 秒开始
 
-### 推荐：直接交给 Codex 安装
+### 推荐：安装独立 macOS App
+
+```bash
+bash scripts/build-macos-app.sh
+bash scripts/install-macos-app.sh
+open "$HOME/Applications/AutoSkin.app"
+```
+
+第一次打开后无需运行初始化命令：App 会自动检测 Codex、运行时版本和已安装主题，缺失时自动
+安装并 apply。右上角菜单栏的调色盘图标会动态列出全部已安装主题，可直接切换主题与布局；
+状态行同时显示 DOM 适配置信度。App 不修改、不替换、不重签名官方 Codex／ChatGPT App。
+
+Codex GUI 更新后，运行时会重新扫描可见 DOM，并根据语义角色、可访问性属性、几何关系和多组
+兼容信号重新标记侧栏、主界面、建议卡与输入框。核心样式只依赖 AutoSkin 自己生成的稳定标记，
+不依赖 Codex 的构建期 class 名；置信度不足时进入 `stale` 并自动恢复，不会静默套错界面。
+
+### 可选：Skill 适配层
+
+需要用自然语言制作和反复调整自己的主题时，可以额外安装 `skill/`。它调用同一套 App
+运行时，不是皮肤生效的必要条件。
 
 把下面这段话发给 Codex：
 
 ```text
-请从 https://github.com/Jiaranbb/autoskin-codex 安装 autoskin-codex Skill。
+请从这个仓库安装 AutoSkin.app，并使用可选的 autoskin-codex Skill 制作主题。
 安装后先运行 doctor，不要修改或替换官方 Codex App。克隆内置的 Chiikawa Summer
 示例并生成预览，等我确认预览后再安装和应用主题。完成后验证首页、新建对话、侧栏、
 输入框和重启后的显示状态。

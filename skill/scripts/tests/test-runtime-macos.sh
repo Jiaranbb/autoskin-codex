@@ -42,6 +42,17 @@ done < <(find "$ROOT/scripts" -type f -name '*.mjs' -print | sort)
   if (unsafe.length) throw new Error(`brace shell variables before non-ASCII text:\n${unsafe.join("\n")}`);
 ' "$ROOT"
 
+echo "Checking semantic GUI adapter boundaries..."
+for marker in dream-sidebar dream-main-surface dream-composer-surface dream-suggestions dream-hero-source; do
+  grep -q "$marker" "$ROOT/assets/renderer-inject.js" || fail "semantic adapter marker is missing: $marker"
+done
+if grep -Eq 'aside\.app-shell-left-panel|main\.main-surface|group\\/home-suggestions' \
+  "$ROOT/styles/dream/style.css" "$ROOT/scripts/theme_core.py"; then
+  fail "core theme CSS still depends on Codex build-time DOM classes"
+fi
+grep -q 'adapter.confidence >= 0.65' "$ROOT/scripts/injector.mjs" || \
+  fail "renderer verification does not enforce adapter confidence"
+
 echo "Checking that the public runtime has no bundled fallback themes..."
 if "$NODE_BIN" "$ROOT/scripts/injector.mjs" --themes >"$TMP_ROOT/themes.json" 2>"$TMP_ROOT/themes.error"; then
   fail "public runtime unexpectedly discovered a bundled fallback theme"

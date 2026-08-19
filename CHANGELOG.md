@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Promote AutoSkin to a standalone macOS menu-bar app with an optional Skill adapter.
+- Detect, install, update, and apply the runtime automatically when the app opens.
+- Enumerate installed themes in the menu bar and switch themes without a command-line workflow.
+- Add a semantic, confidence-scored DOM adapter so core styling does not depend on Codex build-time classes.
+- Surface stale GUI compatibility and recover the renderer automatically after Codex updates.
 - Keep Chiikawa Summer Pool as the only bundled editable theme example.
 - Remove the upstream Aurora Veil and Ember Bloom demo themes from the public package.
 - Allow runtime installation to finish cleanly before a private theme has been installed.

@@ -717,12 +717,13 @@ async function verifySession(session) {
     const home = workHome || chatHome;
     const homeKind = workHome ? 'work' : chatHome ? 'chat' : null;
     const homeContent = workHome?.querySelector(':scope > .dream-home-content') ?? null;
-    const suggestions = workHome ? firstVisible('.group\\\\/home-suggestions', workHome) : null;
+    const heroSource = workHome ? firstVisible('.dream-hero-source', workHome) : null;
+    const suggestions = workHome ? firstVisible('.dream-suggestions', workHome) : null;
     const cards = suggestions
       ? [...suggestions.querySelectorAll('button')].filter(isVisible).map(box)
       : [];
-    const composer = firstVisible('.composer-surface-chrome');
-    const sidebar = firstVisible('aside.app-shell-left-panel');
+    const composer = firstVisible('.composer-surface-chrome, .dream-composer-surface');
+    const sidebar = firstVisible('.dream-sidebar');
     const state = window.__CODEX_DREAM_SKIN_STATE__;
     const result = {
       installed: document.documentElement.classList.contains('codex-dream-skin'),
@@ -730,6 +731,7 @@ async function verifySession(session) {
       theme: state?.theme ?? null,
       layout: state?.layout ?? null,
       themes: state?.themes ?? null,
+      adapter: state?.adapter ?? null,
       stylePresent: Boolean(document.getElementById('codex-dream-skin-style')),
       chromePresent: Boolean(document.getElementById('codex-dream-skin-chrome')),
       legacyControlsPresent: Boolean(document.getElementById('codex-dream-skin-controls')),
@@ -737,7 +739,7 @@ async function verifySession(session) {
       homePresent: Boolean(home),
       homeKind,
       suggestionsPresent: Boolean(suggestions),
-      hero: box(homeContent?.firstElementChild?.firstElementChild),
+      hero: box(heroSource || homeContent?.firstElementChild?.firstElementChild),
       chatCanvas: chatHome ? getComputedStyle(chatHome, '::before').backgroundImage : null,
       cards,
       composer: box(composer),
@@ -751,6 +753,7 @@ async function verifySession(session) {
     result.pass = result.installed && result.stylePresent && result.chromePresent &&
       Array.isArray(result.themes) && result.themes.length > 0 && result.themes.includes(result.theme) &&
       ['banner', 'fullscreen'].includes(result.layout) &&
+      result.adapter?.version && result.adapter.confidence >= 0.65 &&
       !result.legacyControlsPresent &&
       result.chromePointerEvents === 'none' && Boolean(result.composer) && Boolean(result.sidebar) &&
       (!result.homePresent ||
