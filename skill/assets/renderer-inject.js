@@ -11,7 +11,7 @@
   const THEME_STORAGE_KEY = "codex-dream-skin.theme";
   const USAGE_STORAGE_KEY = "codex-dream-skin.usage-percent";
   const USAGE_RESET_STORAGE_KEY = "codex-dream-skin.usage-reset-at";
-  const STYLE_VERSION = "25";
+  const STYLE_VERSION = "26";
   const ADAPTER_VERSION = "semantic-3";
   const LAYOUTS = new Set(["banner", "fullscreen"]);
   // Sidebar "new task" row gets a marker class so the structure CSS can restyle
@@ -256,6 +256,7 @@
     // a second platform tooltip after hovering for a moment.
     orb.removeAttribute("title");
     orb.style.setProperty("--dream-usage-percent", value === null ? "0" : String(value));
+    orb.style.setProperty("--dream-usage-empty", value === null ? "100" : String(100 - value));
     if (value === null) {
       orb.removeAttribute("aria-valuenow");
     } else {
@@ -808,12 +809,12 @@
     },
     get usagePercent() { return usagePercent; },
     get usageResetAt() { return usageResetAt; },
-    version: "3.5.1"
+    version: "3.5.2"
   };
   ensure();
   return {
     installed: true,
-    version: "3.5.1",
+    version: "3.5.2",
     layout: activeLayout,
     theme: activeTheme,
     themes: [...THEME_ORDER],
