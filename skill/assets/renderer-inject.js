@@ -11,7 +11,7 @@
   const THEME_STORAGE_KEY = "codex-dream-skin.theme";
   const USAGE_STORAGE_KEY = "codex-dream-skin.usage-percent";
   const USAGE_RESET_STORAGE_KEY = "codex-dream-skin.usage-reset-at";
-  const STYLE_VERSION = "26";
+  const STYLE_VERSION = "27";
   const ADAPTER_VERSION = "semantic-3";
   const LAYOUTS = new Set(["banner", "fullscreen"]);
   // Sidebar "new task" row gets a marker class so the structure CSS can restyle
@@ -809,12 +809,12 @@
     },
     get usagePercent() { return usagePercent; },
     get usageResetAt() { return usageResetAt; },
-    version: "3.5.2"
+    version: "3.5.3"
   };
   ensure();
   return {
     installed: true,
-    version: "3.5.2",
+    version: "3.5.3",
     layout: activeLayout,
     theme: activeTheme,
     themes: [...THEME_ORDER],

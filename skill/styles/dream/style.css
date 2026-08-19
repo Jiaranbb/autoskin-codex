@@ -348,49 +348,53 @@ html.codex-dream-skin .dream-main-surface > header.app-header-tint {
 }
 #codex-dream-skin-chrome.dream-home-shell .dream-signature { display: block; }
 
-/* Original Chiikawa heart badge, now with a subtle vertical quota fill. It
-   contains no visible text; exact data appears on hover. */
+/* Original compact Chiikawa water-drop badge with a subtle vertical quota
+   fill. It contains no visible text; exact data appears on hover. */
 .dream-usage-orb {
-  --dream-orb-deep: #af55df;
-  --dream-orb-bright: #ff96c9;
+  --dream-orb-deep: #087f9f;
+  --dream-orb-bright: #25d8e8;
   position: absolute;
-  left: -13px;
-  top: -13px;
+  left: -9px;
+  top: -9px;
   z-index: 24;
-  width: 27px;
-  height: 27px;
+  width: 18px;
+  height: 18px;
   box-sizing: border-box;
-  display: grid;
-  place-items: center;
-  border: 0;
+  display: block;
+  border: 1px solid rgba(255,255,255,.88);
   border-radius: 50%;
   outline: none;
   cursor: help;
   pointer-events: auto;
-  color: white;
-  background: linear-gradient(145deg, #f8e7f3, #e8dcf5);
-  box-shadow: 0 4px 12px rgba(136,53,133,.22);
+  background: linear-gradient(180deg, #dffaff, #a9e7ef);
+  box-shadow:
+    0 2px 7px rgba(8,100,126,.28),
+    0 0 0 1px rgba(63,189,210,.48);
 }
 
 .dream-usage-orb[data-level="medium"] {
-  --dream-orb-deep: #9a63d8;
-  --dream-orb-bright: #f38fc2;
+  --dream-orb-deep: #427cae;
+  --dream-orb-bright: #8d8ee8;
 }
 
 .dream-usage-orb[data-level="low"] {
-  --dream-orb-deep: #d8527d;
-  --dream-orb-bright: #ff9aab;
+  --dream-orb-deep: #bd5278;
+  --dream-orb-bright: #f58ba4;
 }
 
 .dream-usage-orb[data-level="unknown"] { opacity: .62; }
 
 .dream-usage-orb::before {
-  content: "♡";
-  position: relative;
+  content: "";
+  position: absolute;
   z-index: 2;
-  font: 700 19px/1 system-ui, sans-serif;
-  transform: translateY(-1px);
-  text-shadow: 0 1px 2px rgba(100,40,120,.22);
+  left: 4px;
+  top: 3px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 0 3px 1px rgba(255,255,255,.48);
 }
 
 .dream-usage-orb-fill {
@@ -408,8 +412,8 @@ html.codex-dream-skin .dream-main-surface > header.app-header-tint {
 .dream-usage-orb::after {
   content: attr(data-tooltip);
   position: absolute;
-  left: 34px;
-  top: -1px;
+  left: 26px;
+  top: -6px;
   z-index: 80;
   width: max-content;
   max-width: min(330px, calc(100vw - 90px));

@@ -160,12 +160,13 @@ const auditExpression = `(() => {
     usageOrb: surface === 'utility' || (Number.isFinite(usagePercent) &&
       usagePercent >= 0 && usagePercent <= 100 &&
       Boolean(usageOrbNode?.querySelector(':scope > .dream-usage-orb-fill')) &&
-      getComputedStyle(usageOrbNode, '::before').content.includes('♡') &&
+      getComputedStyle(usageOrbNode, '::before').backgroundColor !== 'rgba(0, 0, 0, 0)' &&
       getComputedStyle(usageOrbNode).borderRadius === '50%' &&
       !usageOrbNode.hasAttribute('title') &&
       usageOrbNode.textContent.trim() === '' && /% remaining.*Resets/.test(usageOrbNode.dataset.tooltip || '') &&
-      Boolean(usageOrb && composer && Math.abs(usageOrb.x - (composer.x - 13)) <= 2 &&
-        Math.abs(usageOrb.y - (composer.y - 13)) <= 2)),
+      Boolean(usageOrb && composer && usageOrb.width === 18 && usageOrb.height === 18 &&
+        Math.abs(usageOrb.x - (composer.x - 9)) <= 2 &&
+        Math.abs(usageOrb.y - (composer.y - 9)) <= 2)),
     composerLocal: surface === 'utility' || (Boolean(composer) && composer.height < innerHeight * .45 &&
       composer.width * composer.height < innerWidth * innerHeight * .5),
     composerHit: surface === 'utility' || Boolean(composerNode && composer &&
