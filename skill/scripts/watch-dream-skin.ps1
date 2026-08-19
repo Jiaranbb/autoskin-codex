@@ -11,7 +11,15 @@ param(
 )
 
 $ErrorActionPreference = 'Continue'
-$StateRoot = Join-Path $env:LOCALAPPDATA 'CodexDreamSkin'
+$LegacyStateRoot = Join-Path $env:LOCALAPPDATA 'CodexDreamSkin'
+$StateRoot = Join-Path $env:LOCALAPPDATA 'CodexAutoSkin'
+if (-not (Test-Path -LiteralPath $StateRoot) -and (Test-Path -LiteralPath $LegacyStateRoot)) {
+  New-Item -ItemType Directory -Force -Path $StateRoot | Out-Null
+  foreach ($entry in @('runtime', 'themes-private', 'install-state.json', 'config.before-dream-skin.toml', 'state.json', 'paused')) {
+    $sourceEntry = Join-Path $LegacyStateRoot $entry
+    if (Test-Path -LiteralPath $sourceEntry) { Copy-Item -LiteralPath $sourceEntry -Destination $StateRoot -Recurse }
+  }
+}
 $StatePath = Join-Path $StateRoot 'state.json'
 $WatcherStatePath = Join-Path $StateRoot 'watcher-state.json'
 $LogPath = Join-Path $StateRoot 'watcher.log'
@@ -19,7 +27,7 @@ $StartScript = Join-Path $PSScriptRoot 'start-dream-skin.ps1'
 New-Item -ItemType Directory -Force -Path $StateRoot | Out-Null
 
 $createdNew = $false
-$mutex = New-Object System.Threading.Mutex($true, "Local\CodexDreamSkinWatcher-$Port", [ref]$createdNew)
+$mutex = New-Object System.Threading.Mutex($true, "Local\CodexAutoSkinWatcher-$Port", [ref]$createdNew)
 if (-not $createdNew) { exit 0 }
 
 function Write-WatcherLog([string]$Message) {

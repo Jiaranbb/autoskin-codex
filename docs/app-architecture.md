@@ -18,7 +18,7 @@ skill/
 The app installs mutable runtime state outside both application bundles:
 
 ```text
-~/Library/Application Support/CodexDreamSkin/
+~/Library/Application Support/CodexAutoSkin/
 ├── runtime/
 └── themes-private/
 ```
@@ -26,7 +26,9 @@ The app installs mutable runtime state outside both application bundles:
 The app never edits, replaces, unpacks, re-signs, or takes ownership of the official Codex or
 ChatGPT app. It starts the official app with a loopback Chromium debugging port and injects only the
 main renderer. On launch it compares its bundled runtime generation with the installed generation,
-installs the starter theme when needed, and automatically applies or repairs the active skin.
+creates `CodexAutoSkin` when needed, installs the starter theme, and automatically applies or repairs
+the active skin. Recognized state from the legacy `CodexDreamSkin` location is copied once without
+removing or modifying that legacy directory.
 
 The renderer adapter discovers GUI regions from roles, accessibility attributes, visibility,
 geometry, and scored fallback signals. It annotates the live DOM with stable `dream-*` markers;

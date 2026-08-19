@@ -7,7 +7,8 @@ AUTOSKIN_ROOT="$RESOURCE_ROOT/AutoSkinRuntime"
 CLI="$AUTOSKIN_ROOT/scripts/autoskin-macos.sh"
 THEME_INSTALLER="$AUTOSKIN_ROOT/scripts/install_theme.py"
 STARTER_THEME="$AUTOSKIN_ROOT/examples/chiikawa-summer"
-INSTALLED_ROOT="$HOME/Library/Application Support/CodexDreamSkin/runtime"
+STATE_ROOT="$HOME/Library/Application Support/CodexAutoSkin"
+INSTALLED_ROOT="$STATE_ROOT/runtime"
 INSTALLED_CLI="$INSTALLED_ROOT/scripts/autoskin-macos.sh"
 INSTALLED_MENU="$INSTALLED_ROOT/scripts/autoskin-menubar-macos.sh"
 SCREENSHOT_ROOT="$HOME/Library/Application Support/AutoSkinCodex/verification"
@@ -45,7 +46,7 @@ ensure_skin() {
   bundle_version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_INFO")"
   [ ! -f "$APP_STATE_ROOT/app-runtime-version" ] || installed_version="$(<"$APP_STATE_ROOT/app-runtime-version")"
   if [ ! -x "$INSTALLED_CLI" ] || [ "$installed_version" != "$bundle_version" ] || \
-     [ ! -f "$HOME/Library/Application Support/CodexDreamSkin/themes-private/chiikawa-summer/theme.json" ]; then
+     [ ! -f "$STATE_ROOT/themes-private/chiikawa-summer/theme.json" ]; then
     install_skin
     needs_apply=true
   fi
@@ -61,7 +62,7 @@ ensure_skin() {
 
 list_themes() {
   [ -x "$INSTALLED_CLI" ] || { echo '{"themes":[]}'; return; }
-  local install_state="$HOME/Library/Application Support/CodexDreamSkin/install-state.json"
+  local install_state="$STATE_ROOT/install-state.json"
   local node_bin
   node_bin="$(/usr/bin/plutil -extract nodePath raw -o - "$install_state" 2>/dev/null || true)"
   [ -x "$node_bin" ] || die "installed Node.js path is unavailable"
@@ -142,8 +143,11 @@ case "$COMMAND" in
     bash "$CLI" doctor
     ;;
   open-themes)
-    mkdir -p "$HOME/Library/Application Support/CodexDreamSkin/themes-private"
-    /usr/bin/open "$HOME/Library/Application Support/CodexDreamSkin/themes-private"
+    # App launch normally prepares this directory through `ensure`; running a
+    # lightweight status probe here also covers a direct command invocation.
+    bash "$CLI" status >/dev/null 2>&1 || true
+    mkdir -p "$STATE_ROOT/themes-private"
+    /usr/bin/open "$STATE_ROOT/themes-private"
     ;;
   self-test)
     require_resources

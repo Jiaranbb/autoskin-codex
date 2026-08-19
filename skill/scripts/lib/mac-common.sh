@@ -106,7 +106,23 @@ dream_resolve_app() {
 }
 
 dream_state_root() {
-  printf '%s\n' "$HOME/Library/Application Support/CodexDreamSkin"
+  local state_root="$HOME/Library/Application Support/CodexAutoSkin"
+  local legacy_root="$HOME/Library/Application Support/CodexDreamSkin"
+  # AutoSkin previously inherited CodexDreamSkin from another engine. Copy only
+  # the state entries this runtime owns and leave the legacy directory untouched.
+  if [ ! -e "$state_root" ] && [ -d "$legacy_root" ]; then
+    mkdir -p "$state_root"
+    local entry
+    for entry in runtime themes-private install-state.json config.before-dream-skin.toml \
+      state.json paused injector.log injector-error.log watcher-state.json watcher.log \
+      launch-agent.log launch-agent-error.log; do
+      [ ! -e "$legacy_root/$entry" ] || [ -e "$state_root/$entry" ] || \
+        /usr/bin/ditto "$legacy_root/$entry" "$state_root/$entry"
+    done
+    printf 'legacyRoot=%s\nmigratedAt=%s\n' "$legacy_root" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" \
+      >"$state_root/.migrated-from-CodexDreamSkin"
+  fi
+  printf '%s\n' "$state_root"
 }
 
 dream_install_state_path() {

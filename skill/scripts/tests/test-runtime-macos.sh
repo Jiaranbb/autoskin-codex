@@ -231,6 +231,9 @@ HOME="$TEST_HOME" /bin/bash -c '
   set -euo pipefail
   . "$1/scripts/lib/mac-common.sh"
   [ "$(dream_installed_port)" = "19335" ]
+  [ -f "$HOME/Library/Application Support/CodexAutoSkin/install-state.json" ]
+  [ -f "$HOME/Library/Application Support/CodexAutoSkin/.migrated-from-CodexDreamSkin" ]
+  [ -f "$HOME/Library/Application Support/CodexDreamSkin/install-state.json" ]
   dream_resolve_app ""
   [ "$APP_BUNDLE" = "$2" ]
 ' test "$ROOT" "$FAKE_APP"
@@ -240,7 +243,7 @@ mkdir -p "$TEST_HOME/.codex"
 printf '%s\n' '[desktop]' 'appearanceTheme = "dark"' >"$TEST_HOME/.codex/config.toml"
 HOME="$TEST_HOME" bash "$ROOT/scripts/autoskin-macos.sh" install \
   --no-start --no-auto-recover --port 19337 --app "$FAKE_APP" --node "$NODE_BIN" >/dev/null
-INSTALLED_ROOT="$TEST_HOME/Library/Application Support/CodexDreamSkin"
+INSTALLED_ROOT="$TEST_HOME/Library/Application Support/CodexAutoSkin"
 [ -x "$INSTALLED_ROOT/runtime/scripts/autoskin-macos.sh" ] || fail "unified installer did not create a stable runtime"
 [ -f "$INSTALLED_ROOT/config.before-dream-skin.toml" ] || fail "unified installer did not back up base colors"
 [ ! -e "$TEST_HOME/Library/LaunchAgents/com.codex-autoskin.watcher.plist" ] || fail "--no-auto-recover installed a LaunchAgent"
@@ -269,7 +272,7 @@ for _ in 1 2; do
   HOME="$TEST_HOME" bash "$ROOT/scripts/restore-dream-skin.sh" \
     --uninstall --restore-base-theme --node "$NODE_BIN" >/dev/null
 done
-[ ! -e "$TEST_HOME/Library/Application Support/CodexDreamSkin/runtime" ] || fail "runtime was not removed"
-[ ! -e "$TEST_HOME/Library/Application Support/CodexDreamSkin/install-state.json" ] || fail "install state was not removed"
+[ ! -e "$TEST_HOME/Library/Application Support/CodexAutoSkin/runtime" ] || fail "runtime was not removed"
+[ ! -e "$TEST_HOME/Library/Application Support/CodexAutoSkin/install-state.json" ] || fail "install state was not removed"
 
 echo "All macOS tests passed."

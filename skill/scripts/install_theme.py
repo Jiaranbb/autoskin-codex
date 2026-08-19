@@ -27,10 +27,10 @@ def state_root() -> Path:
 
 def default_runtime_root() -> Path:
     if sys.platform == "darwin":
-        return Path.home() / "Library" / "Application Support" / "CodexDreamSkin" / "runtime"
+        return Path.home() / "Library" / "Application Support" / "CodexAutoSkin" / "runtime"
     if os.name == "nt":
-        return Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "CodexDreamSkin" / "runtime"
-    return Path.home() / ".local" / "share" / "codex-dream-skin" / "runtime"
+        return Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "CodexAutoSkin" / "runtime"
+    return Path.home() / ".local" / "share" / "codex-autoskin" / "runtime"
 
 
 def default_private_root(runtime_root: Path) -> Path:

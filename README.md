@@ -220,13 +220,16 @@ macOS 不要求安装 Homebrew 或 SwiftBar。原生菜单栏控制器属于可�
 主题与运行时默认保存在包体外：
 
 ```text
-~/Library/Application Support/CodexDreamSkin/
+~/Library/Application Support/CodexAutoSkin/
 ├── runtime/
 └── themes-private/
 
 ~/Library/Application Support/AutoSkinCodex/
 └── snapshots/
 ```
+
+`CodexAutoSkin` 由 AutoSkin App 首次启动时自动创建。若检测到旧的 `CodexDreamSkin` 状态，
+只复制 AutoSkin 使用的运行时、主题和状态文件；旧目录会完整保留，避免影响其他引擎。
 
 因此升级 Skill 时不应删除 `themes-private/`。不要用删除整个运行时目录的方式更新主题。
 

@@ -55,6 +55,8 @@ private final class AutoSkinAppDelegate: NSObject, NSApplicationDelegate {
         themesItem.submenu = themesMenu
         menu.addItem(themesItem)
         menu.addItem(.separator())
+        menu.addItem(item("Open Theme Folder", #selector(openThemeFolder)))
+        menu.addItem(.separator())
         menu.addItem(item("Quit AutoSkin", #selector(quit), key: "q"))
         statusItem.menu = menu
     }
@@ -187,6 +189,10 @@ private final class AutoSkinAppDelegate: NSObject, NSApplicationDelegate {
         } else {
             runAction("theme", arguments: [identifier], title: "Switch to \(sender.title)")
         }
+    }
+
+    @objc private func openThemeFolder() {
+        runAction("open-themes", title: "Open Theme Folder")
     }
 
     @objc private func quit() {

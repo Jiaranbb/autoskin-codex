@@ -5,6 +5,8 @@
 - Promote AutoSkin to a standalone macOS menu-bar app with an optional Skill adapter.
 - Detect, install, update, and apply the runtime automatically when the app opens.
 - Enumerate installed themes in the menu bar and switch themes without a command-line workflow.
+- Open the editable theme folder directly from the macOS menu bar.
+- Rename the external runtime directory to `CodexAutoSkin` and copy recognized legacy `CodexDreamSkin` state automatically without removing the old directory.
 - Add a semantic, confidence-scored DOM adapter so core styling does not depend on Codex build-time classes.
 - Surface stale GUI compatibility and recover the renderer automatically after Codex updates.
 - Keep Chiikawa Summer Pool as the only bundled editable theme example.

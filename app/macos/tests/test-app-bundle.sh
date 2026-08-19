@@ -17,9 +17,17 @@ grep -q 'needs_apply=true' "$RESOURCES/autoskin-app-command.sh"
 grep -q 'Original Codex Skin' "$REPO_ROOT/app/macos/AutoSkinApp.swift"
 grep -q 'runAction("original"' "$REPO_ROOT/app/macos/AutoSkinApp.swift"
 grep -q '^  original)' "$RESOURCES/autoskin-app-command.sh"
-if grep -Eq 'menu\.addItem\(item\("(Verify|Pause Skin|Resume Skin|Layout|Open Theme Folder|Refresh Status|Re-scan and Apply)' \
+grep -q 'menu.addItem(item("Open Theme Folder", #selector(openThemeFolder)))' "$REPO_ROOT/app/macos/AutoSkinApp.swift"
+grep -q 'runAction("open-themes", title: "Open Theme Folder")' "$REPO_ROOT/app/macos/AutoSkinApp.swift"
+grep -q '^  open-themes)' "$RESOURCES/autoskin-app-command.sh"
+grep -q 'Application Support/CodexAutoSkin' "$RESOURCES/autoskin-app-command.sh"
+if grep -q 'Application Support/CodexDreamSkin' "$RESOURCES/autoskin-app-command.sh"; then
+  echo "AutoSkin.app still points its live runtime at the legacy CodexDreamSkin directory" >&2
+  exit 1
+fi
+if grep -Eq 'menu\.addItem\(item\("(Verify|Pause Skin|Resume Skin|Layout|Refresh Status|Re-scan and Apply)' \
   "$REPO_ROOT/app/macos/AutoSkinApp.swift"; then
-  echo "AutoSkin status menu contains controls outside Themes and Quit" >&2
+  echo "AutoSkin status menu contains controls outside Themes, Open Theme Folder, and Quit" >&2
   exit 1
 fi
 

@@ -9,7 +9,15 @@ param(
 $ErrorActionPreference = 'Stop'
 $SkillRoot = Split-Path -Parent $PSScriptRoot
 $Injector = Join-Path $PSScriptRoot 'injector.mjs'
-$StateRoot = Join-Path $env:LOCALAPPDATA 'CodexDreamSkin'
+$LegacyStateRoot = Join-Path $env:LOCALAPPDATA 'CodexDreamSkin'
+$StateRoot = Join-Path $env:LOCALAPPDATA 'CodexAutoSkin'
+if (-not (Test-Path -LiteralPath $StateRoot) -and (Test-Path -LiteralPath $LegacyStateRoot)) {
+  New-Item -ItemType Directory -Force -Path $StateRoot | Out-Null
+  foreach ($entry in @('runtime', 'themes-private', 'install-state.json', 'config.before-dream-skin.toml', 'state.json', 'paused')) {
+    $sourceEntry = Join-Path $LegacyStateRoot $entry
+    if (Test-Path -LiteralPath $sourceEntry) { Copy-Item -LiteralPath $sourceEntry -Destination $StateRoot -Recurse }
+  }
+}
 $StatePath = Join-Path $StateRoot 'state.json'
 $StdoutPath = Join-Path $StateRoot 'injector.log'
 $StderrPath = Join-Path $StateRoot 'injector-error.log'
