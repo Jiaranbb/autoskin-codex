@@ -262,6 +262,7 @@ html.codex-dream-skin .dream-sidebar button[aria-label="Open profile menu"] img 
 
 html.codex-dream-skin .dream-main-surface {
   position: relative !important;
+  isolation: isolate;
   background:
     radial-gradient(circle at 84% 10%, var(--dream-page-glow-a), transparent 30%),
     radial-gradient(circle at 20% 0%, var(--dream-page-glow-b), transparent 26%),
@@ -277,7 +278,7 @@ html.codex-dream-skin .dream-main-surface {
 html.codex-dream-skin .dream-main-surface.dream-conversation-shell::before {
   content: "";
   position: absolute;
-  z-index: 0;
+  z-index: -1;
   inset: 47px 0 0;
   pointer-events: none;
   opacity: var(--dream-chat-art-opacity);
@@ -291,7 +292,7 @@ html.codex-dream-skin .dream-main-surface.dream-conversation-shell::before {
 html.codex-dream-skin .dream-main-surface.dream-conversation-shell::after {
   content: "";
   position: absolute;
-  z-index: 0;
+  z-index: -1;
   inset: 47px 0 0;
   pointer-events: none;
   background: linear-gradient(90deg, var(--dream-chat-wash) 0%, rgba(255, 253, 251, .62) 48%, rgba(255, 253, 251, .38) 100%);

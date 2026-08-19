@@ -62,6 +62,11 @@ grep -q 'sidebar?.parentElement?.children' "$ROOT/assets/renderer-inject.js" || 
   fail "semantic adapter cannot resolve the classless Settings content pane"
 grep -q 'dream-sidebar::before' "$ROOT/styles/dream/style.css" || \
   fail "history column is not rendered as a complete themed surface"
+grep -q 'isolation: isolate' "$ROOT/styles/dream/style.css" || \
+  fail "conversation artwork is not isolated behind native message content"
+if [ "$(grep -c 'z-index: -1' "$ROOT/styles/dream/style.css")" -lt 2 ]; then
+  fail "conversation artwork or wash can still cover native message content"
+fi
 grep -q 'noHomeComposerOverlap' "$ROOT/scripts/live-ui-audit.mjs" || \
   fail "live UI audit does not check home/composer overlap"
 grep -q 'sidebarHit' "$ROOT/scripts/live-ui-audit.mjs" || \

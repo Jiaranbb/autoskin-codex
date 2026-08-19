@@ -91,6 +91,12 @@ class ThemeValidationTests(unittest.TestCase):
         )
         self.assertEqual(len(runtime["decorations"]), len(manifest["decorations"]))
 
+    def test_conversation_art_keeps_readable_contrast(self) -> None:
+        build_dir, _ = build_theme(self.theme)
+        runtime = json.loads((build_dir / "theme.json").read_text(encoding="utf-8"))
+        self.assertEqual(runtime["tokens"]["--dream-chat-art-opacity"], "0.320")
+        self.assertEqual(runtime["tokens"]["--dream-chat-wash"], "rgba(248, 254, 255, 0.460)")
+
     def test_hero_title_preserves_native_project_button(self) -> None:
         manifest = self.read_manifest()
         manifest["content"]["heroTitle"] = "A title without a project slot"  # type: ignore[index]
