@@ -351,8 +351,8 @@ html.codex-dream-skin .dream-main-surface > header.app-header-tint {
 /* Original compact Chiikawa water-drop badge with a subtle vertical quota
    fill. It contains no visible text; exact data appears on hover. */
 .dream-usage-orb {
-  --dream-orb-deep: #087f9f;
-  --dream-orb-bright: #25d8e8;
+  --dream-orb-deep: #056f89;
+  --dream-orb-bright: #16b8cf;
   position: absolute;
   left: -9px;
   top: -9px;
@@ -366,15 +366,17 @@ html.codex-dream-skin .dream-main-surface > header.app-header-tint {
   outline: none;
   cursor: help;
   pointer-events: auto;
-  background: linear-gradient(180deg, #dffaff, #a9e7ef);
+  background:
+    radial-gradient(circle at 32% 22%, rgba(255,255,255,.34), transparent 28%),
+    linear-gradient(160deg, var(--dream-orb-bright), var(--dream-orb-deep));
   box-shadow:
     0 2px 7px rgba(8,100,126,.28),
     0 0 0 1px rgba(63,189,210,.48);
 }
 
 .dream-usage-orb[data-level="medium"] {
-  --dream-orb-deep: #427cae;
-  --dream-orb-bright: #8d8ee8;
+  --dream-orb-deep: #48679b;
+  --dream-orb-bright: #7886cf;
 }
 
 .dream-usage-orb[data-level="low"] {
@@ -402,11 +404,23 @@ html.codex-dream-skin .dream-main-surface > header.app-header-tint {
   z-index: 1;
   inset: 0;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 32% 22%, rgba(255,255,255,.38), transparent 30%),
-    linear-gradient(145deg, var(--dream-orb-bright), var(--dream-orb-deep));
-  clip-path: inset(calc(var(--dream-usage-empty, 100) * 1%) 0 0 0 round 999px);
-  transition: clip-path .3s ease, background .3s ease;
+  overflow: hidden;
+}
+
+.dream-usage-orb-fill::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--dream-usage-percent, 0) * 1%);
+  background: linear-gradient(180deg,
+    rgba(255,255,255,.98) 0 2px,
+    rgba(229,253,255,.96) 3px,
+    rgba(151,240,247,.91) 46%,
+    rgba(54,207,222,.88) 100%);
+  box-shadow: 0 -1px 3px rgba(255,255,255,.94);
+  transition: height .3s ease;
 }
 
 .dream-usage-orb::after {

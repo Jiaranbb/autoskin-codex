@@ -126,6 +126,7 @@ const auditExpression = `(() => {
   const composerNode = first('.composer-surface-chrome, .dream-composer-surface');
   const composer = box(composerNode);
   const usageOrbNode = first('.dream-usage-orb');
+  const usageFillNode = usageOrbNode?.querySelector(':scope > .dream-usage-orb-fill') ?? null;
   const usageOrb = box(usageOrbNode);
   const surface = workHome ? 'work-home' : chatHome ? 'chat-home' :
     composerNode ? 'conversation' : 'utility';
@@ -146,6 +147,9 @@ const auditExpression = `(() => {
     visible(node) && ['Chat', 'Work'].includes((node.innerText || '').trim()));
   const measured = [hero, ...cards, composer, usageOrb].filter(Boolean);
   const usagePercent = Number(usageOrbNode?.dataset.dreamUsagePercent);
+  const usageFillPercent = usageFillNode ?
+    parseFloat(getComputedStyle(usageFillNode, '::before').height) /
+      usageFillNode.getBoundingClientRect().height * 100 : NaN;
   const checks = {
     skinInstalled: document.documentElement.classList.contains('codex-dream-skin'),
     adapterConfident: Boolean(state?.adapter?.version) && state.adapter.confidence >= 0.65,
@@ -159,7 +163,7 @@ const auditExpression = `(() => {
     }),
     usageOrb: surface === 'utility' || (Number.isFinite(usagePercent) &&
       usagePercent >= 0 && usagePercent <= 100 &&
-      Boolean(usageOrbNode?.querySelector(':scope > .dream-usage-orb-fill')) &&
+      Boolean(usageFillNode) && Math.abs(usageFillPercent - usagePercent) <= 2 &&
       getComputedStyle(usageOrbNode, '::before').backgroundColor !== 'rgba(0, 0, 0, 0)' &&
       getComputedStyle(usageOrbNode).borderRadius === '50%' &&
       !usageOrbNode.hasAttribute('title') &&
