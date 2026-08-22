@@ -41,10 +41,25 @@ private final class AutoSkinAppDelegate: NSObject, NSApplicationDelegate {
         return resources.appendingPathComponent("autoskin-app-command.sh")
     }
 
+    private func statusIcon() -> NSImage? {
+        guard let symbol = NSImage(
+            systemSymbolName: "paintpalette.fill",
+            accessibilityDescription: "AutoSkin"
+        ) else {
+            return nil
+        }
+        let configuration = NSImage.SymbolConfiguration(paletteColors: [.white])
+        let configured = symbol.withSymbolConfiguration(configuration) ?? symbol
+        let image = (configured.copy() as? NSImage) ?? configured
+        image.isTemplate = false
+        return image
+    }
+
     private func buildMenu() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "paintpalette.fill", accessibilityDescription: "AutoSkin")
+            button.image = statusIcon()
+            button.contentTintColor = nil
             button.toolTip = "AutoSkin for Codex"
         }
 
@@ -132,7 +147,7 @@ private final class AutoSkinAppDelegate: NSObject, NSApplicationDelegate {
             let session = values["session"] ?? (result.exitCode == 0 ? "unknown" : "not installed")
             let themeResult = self.run("themes")
             DispatchQueue.main.async {
-                self.statusItem.button?.contentTintColor = session == "active" ? .systemTeal : nil
+                self.statusItem.button?.contentTintColor = nil
                 self.updateThemesMenu(
                     themeResult,
                     selected: values["theme"] ?? "",

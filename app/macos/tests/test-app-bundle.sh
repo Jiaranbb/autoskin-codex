@@ -16,6 +16,12 @@ grep -q 'needs_apply=true' "$RESOURCES/autoskin-app-command.sh"
 [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist")" = "app.autoskin.codex" ]
 grep -q 'Original Codex Skin' "$REPO_ROOT/app/macos/AutoSkinApp.swift"
 grep -q 'runAction("original"' "$REPO_ROOT/app/macos/AutoSkinApp.swift"
+grep -q 'SymbolConfiguration(paletteColors: \[.white\])' "$REPO_ROOT/app/macos/AutoSkinApp.swift"
+grep -q 'image.isTemplate = false' "$REPO_ROOT/app/macos/AutoSkinApp.swift"
+if grep -q 'contentTintColor = session == "active"' "$REPO_ROOT/app/macos/AutoSkinApp.swift"; then
+  echo "AutoSkin status icon still changes tint with the active skin state" >&2
+  exit 1
+fi
 grep -q '^  original)' "$RESOURCES/autoskin-app-command.sh"
 grep -q 'menu.addItem(item("Open Theme Folder", #selector(openThemeFolder)))' "$REPO_ROOT/app/macos/AutoSkinApp.swift"
 grep -q 'runAction("open-themes", title: "Open Theme Folder")' "$REPO_ROOT/app/macos/AutoSkinApp.swift"
