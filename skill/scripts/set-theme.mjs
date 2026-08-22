@@ -100,7 +100,8 @@ const expression = `(() => {
   const request = ${JSON.stringify({ theme: options.theme, layout: options.layout, list: options.list })};
   const themes = state.themes ?? [];
   if (request.list) {
-    return { ok: true, theme: state.theme, layout: state.layout, themes, defaultTheme: state.defaultTheme, defaultLayout: state.defaultLayout };
+    return { ok: true, theme: state.theme, layout: state.layout, themes, adapter: state.adapter,
+      defaultTheme: state.defaultTheme, defaultLayout: state.defaultLayout };
   }
   if (request.theme && !themes.includes(request.theme)) {
     return { ok: false, error: "unknown theme: " + request.theme, themes };

@@ -1,8 +1,9 @@
 # AutoSkin Codex
 
-**深度个性化订制 Codex 桌面皮肤：从主题制作、多界面预览到安全安装与恢复。**
+**独立的 Codex 桌面皮肤管理 App：从主题制作、多界面预览到安全安装与恢复。**
 
-[![Codex Skill](https://img.shields.io/badge/Codex-Skill-16ABC4)](#30-秒开始)
+[![macOS App](https://img.shields.io/badge/macOS-AutoSkin.app-16ABC4)](#30-秒开始)
+[![Optional Skill](https://img.shields.io/badge/Codex-Skill%20adapter-6A8790)](#可选skill-适配层)
 [![macOS tested](https://img.shields.io/badge/macOS-tested-16ABC4)](#支持的平台与依赖)
 [![Windows scripts](https://img.shields.io/badge/Windows-scripts%20included-6A8790)](#支持的平台与依赖)
 [![Publisher](https://img.shields.io/badge/publisher-Jiaranbb-F08FA9)](https://github.com/Jiaranbb)
@@ -13,10 +14,14 @@
 
 发布者：[Jiaranbb](https://github.com/Jiaranbb)
 
-AutoSkin Codex 是一个用于深度定制 Codex 桌面应用的主题皮肤制作与安装 Skill。项目基于
+AutoSkin Codex 是一个独立的 macOS 菜单栏 App，负责安装、切换、暂停、恢复和验证 Codex
+桌面皮肤。项目基于
 [`Finderchangchang/codex-autoskin`](https://github.com/Finderchangchang/codex-autoskin)
 的安全换肤思路进行了重构和优化：重新设计主题 schema、预览器和安装流程，把图片素材、
 语义配置、生成文件与本地运行时分开管理。
+
+仓库中的 `skill/` 现在是可选的 Agent 适配层和跨平台工具箱，不再承担产品身份。App Bundle
+内置经过验证的本地运行时与 Chiikawa Summer 示例，因此日常安装和控制不依赖 skill。
 
 AutoSkin Codex 对实际界面中的多个部位提供深度个性化订制。顶部 Banner、标题栏、侧栏、
 建议卡片、输入框、图标、文案、裁切和透明度都可以分别调整，并由 Agent 协助完成主题制作
@@ -52,12 +57,31 @@ AutoSkin Codex 对实际界面中的多个部位提供深度个性化订制。�
 
 ## 30 秒开始
 
-### 推荐：直接交给 Codex 安装
+### 推荐：安装独立 macOS App
+
+```bash
+bash scripts/build-macos-app.sh
+bash scripts/install-macos-app.sh
+open "$HOME/Applications/AutoSkin.app"
+```
+
+第一次打开后无需运行初始化命令：App 会自动检测 Codex、运行时版本和已安装主题，缺失时自动
+安装并 apply。右上角菜单栏的调色盘图标会动态列出全部已安装主题，可直接切换主题与布局；
+状态行同时显示 DOM 适配置信度。App 不修改、不替换、不重签名官方 Codex／ChatGPT App。
+
+Codex GUI 更新后，运行时会重新扫描可见 DOM，并根据语义角色、可访问性属性、几何关系和多组
+兼容信号重新标记侧栏、主界面、建议卡与输入框。核心样式只依赖 AutoSkin 自己生成的稳定标记，
+不依赖 Codex 的构建期 class 名；置信度不足时进入 `stale` 并自动恢复，不会静默套错界面。
+
+### 可选：Skill 适配层
+
+需要用自然语言制作和反复调整自己的主题时，可以额外安装 `skill/`。它调用同一套 App
+运行时，不是皮肤生效的必要条件。
 
 把下面这段话发给 Codex：
 
 ```text
-请从 https://github.com/Jiaranbb/autoskin-codex 安装 autoskin-codex Skill。
+请从这个仓库安装 AutoSkin.app，并使用可选的 autoskin-codex Skill 制作主题。
 安装后先运行 doctor，不要修改或替换官方 Codex App。克隆内置的 Chiikawa Summer
 示例并生成预览，等我确认预览后再安装和应用主题。完成后验证首页、新建对话、侧栏、
 输入框和重启后的显示状态。
@@ -196,13 +220,16 @@ macOS 不要求安装 Homebrew 或 SwiftBar。原生菜单栏控制器属于可�
 主题与运行时默认保存在包体外：
 
 ```text
-~/Library/Application Support/CodexDreamSkin/
+~/Library/Application Support/CodexAutoSkin/
 ├── runtime/
 └── themes-private/
 
 ~/Library/Application Support/AutoSkinCodex/
 └── snapshots/
 ```
+
+`CodexAutoSkin` 由 AutoSkin App 首次启动时自动创建。若检测到旧的 `CodexDreamSkin` 状态，
+只复制 AutoSkin 使用的运行时、主题和状态文件；旧目录会完整保留，避免影响其他引擎。
 
 因此升级 Skill 时不应删除 `themes-private/`。不要用删除整个运行时目录的方式更新主题。
 
@@ -249,6 +276,16 @@ bash scripts/autoskin-macos.sh install --no-start
 python3 scripts/install_theme.py /absolute/path/my-theme --apply
 bash scripts/autoskin-macos.sh verify
 ```
+
+真实 Codex UI 回归（不会发送消息或修改会话）可在任一当前页面运行：
+
+```bash
+node scripts/live-ui-audit.mjs --port 9335
+```
+
+审计会临时覆盖 `1708×977`、`1180×820`、`900×760`、`720×700` 四种视口，
+分别验证 fullscreen/banner 布局，并在结束后恢复原布局和窗口状态。发布前应至少在 Work 首页、
+Chat 首页、一个有内容的会话、Settings、Plugins、Sites 和 Scheduled 各运行一次。
 
 完整 schema、预览验收和运行时说明见：
 

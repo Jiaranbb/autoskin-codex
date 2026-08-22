@@ -22,7 +22,7 @@ such as avatar overlays must remain transparent and unskinned.
 Keep the attributed safe runtime, installed private themes, and this skill's snapshots separate:
 
 ```text
-~/Library/Application Support/CodexDreamSkin/
+~/Library/Application Support/CodexAutoSkin/
 ├── runtime/                 # attributed safe renderer runtime
 └── themes-private/          # private installed themes
 
@@ -30,7 +30,11 @@ Keep the attributed safe runtime, installed private themes, and this skill's sna
 └── snapshots/               # automatic install/recovery snapshots
 ```
 
-The Windows equivalent lives below `%LOCALAPPDATA%\\AutoSkinCodex`.
+The Windows equivalent lives below `%LOCALAPPDATA%\\CodexAutoSkin`.
+
+The standalone app creates this directory automatically. If the legacy `CodexDreamSkin` directory
+exists and `CodexAutoSkin` does not, copy only recognized AutoSkin runtime/theme/state entries and
+leave the legacy directory untouched.
 
 The snapshot records source path, schema version, build hashes, installation time, target path,
 and native-theme edit plan. Runtime menus enumerate both `runtime/themes/` and
@@ -59,7 +63,7 @@ When replacing an older installed skill while keeping a live theme:
 python3 scripts/adopt-runtime-macos.py
 ```
 
-This refreshes only `CodexDreamSkin/runtime/` and its `sourceRoot`. It preserves
+This refreshes only `CodexAutoSkin/runtime/` and its `sourceRoot`. It preserves
 `themes-private/`, the selected theme, the paused marker, the LaunchAgent, and `~/.codex/config.toml`.
 
 On Windows, use the bundled PowerShell scripts. Run PowerShell with an execution policy suitable

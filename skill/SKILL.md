@@ -1,11 +1,13 @@
 ---
 name: autoskin-codex
-description: Create, preview, validate, package, install, switch, repair, or remove custom themes for the Codex desktop app. Use when a user provides images or design requirements for a Codex skin, wants an existing AutoSkin theme migrated away from hand-written token/Base64 CSS, needs accurate fullscreen/banner/chat previews, or needs a reversible macOS/Windows installation workflow that preserves the official app and private themes.
+description: Optional agent adapter for the standalone AutoSkin app. Create, preview, validate, package, install, switch, repair, or remove custom themes for the Codex desktop app when a user wants natural-language theme authoring or cross-platform automation.
 ---
 
 # AutoSkin Codex
 
-Build themes from semantic data and ordinary asset files. Attribute the runtime approach to
+This Skill is an optional automation adapter, not the AutoSkin product or long-running runtime.
+Prefer `AutoSkin.app` for ordinary macOS installation and lifecycle control. Use this adapter to
+build themes from semantic data and ordinary asset files. Attribute the runtime approach to
 `Finderchangchang/codex-autoskin`; do not patch, replace, or re-sign the official Codex app.
 
 ## Workflow

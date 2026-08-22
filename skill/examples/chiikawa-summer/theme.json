@@ -62,11 +62,11 @@
       "fit": "cover",
       "scale": 1,
       "focalPoint": [0.54, 0.5],
-      "opacity": 0.18,
+      "opacity": 0.32,
       "overlay": {
         "kind": "solid",
         "color": "#F8FEFF",
-        "strength": 0.78,
+        "strength": 0.46,
         "anchor": [0.5, 0.5]
       }
     }

@@ -13,7 +13,16 @@ from pathlib import Path
 
 
 SKILL_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_STATE_ROOT = Path.home() / "Library" / "Application Support" / "CodexDreamSkin"
+DEFAULT_STATE_ROOT = Path.home() / "Library" / "Application Support" / "CodexAutoSkin"
+LEGACY_STATE_ROOT = Path.home() / "Library" / "Application Support" / "CodexDreamSkin"
+MIGRATED_ENTRIES = (
+    "runtime",
+    "themes-private",
+    "install-state.json",
+    "config.before-dream-skin.toml",
+    "state.json",
+    "paused",
+)
 
 
 def load_object(path: Path) -> dict[str, object]:
@@ -49,6 +58,15 @@ def main() -> int:
 
     source = Path(args.source).expanduser().resolve()
     state_root = Path(args.state_root).expanduser().resolve()
+    if state_root == DEFAULT_STATE_ROOT and not state_root.exists() and LEGACY_STATE_ROOT.is_dir():
+        state_root.mkdir(parents=True)
+        for name in MIGRATED_ENTRIES:
+            source_entry = LEGACY_STATE_ROOT / name
+            destination_entry = state_root / name
+            if source_entry.is_dir():
+                shutil.copytree(source_entry, destination_entry)
+            elif source_entry.is_file():
+                shutil.copy2(source_entry, destination_entry)
     state_path = state_root / "install-state.json"
     runtime_root = state_root / "runtime"
     if not state_path.is_file():

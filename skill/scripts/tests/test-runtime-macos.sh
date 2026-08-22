@@ -42,6 +42,57 @@ done < <(find "$ROOT/scripts" -type f -name '*.mjs' -print | sort)
   if (unsafe.length) throw new Error(`brace shell variables before non-ASCII text:\n${unsafe.join("\n")}`);
 ' "$ROOT"
 
+echo "Checking semantic GUI adapter boundaries..."
+for marker in dream-sidebar dream-main-surface dream-composer-surface dream-suggestions dream-hero-source; do
+  grep -q "$marker" "$ROOT/assets/renderer-inject.js" || fail "semantic adapter marker is missing: $marker"
+done
+if grep -Eq 'aside\.app-shell-left-panel|main\.main-surface|group\\/home-suggestions' \
+  "$ROOT/styles/dream/style.css" "$ROOT/scripts/theme_core.py"; then
+  fail "core theme CSS still depends on Codex build-time DOM classes"
+fi
+grep -q 'adapter.confidence >= 0.65' "$ROOT/scripts/injector.mjs" || \
+  fail "renderer verification does not enforce adapter confidence"
+grep -q 'composerLooksLocal' "$ROOT/scripts/injector.mjs" || \
+  fail "renderer verification accepts a whole-page composer marker"
+grep -q 'candidate.classList.remove("dream-composer-surface")' "$ROOT/assets/renderer-inject.js" || \
+  fail "semantic adapter does not clear its previous composer paint before rescoring"
+grep -q 'surfaceKind === "utility"' "$ROOT/assets/renderer-inject.js" || \
+  fail "semantic adapter does not distinguish utility pages from conversations"
+grep -q 'sidebar?.parentElement?.children' "$ROOT/assets/renderer-inject.js" || \
+  fail "semantic adapter cannot resolve the classless Settings content pane"
+grep -q 'dream-sidebar::before' "$ROOT/styles/dream/style.css" || \
+  fail "history column is not rendered as a complete themed surface"
+grep -q 'isolation: isolate' "$ROOT/styles/dream/style.css" || \
+  fail "conversation artwork is not isolated behind native message content"
+if [ "$(grep -c 'z-index: -1' "$ROOT/styles/dream/style.css")" -lt 2 ]; then
+  fail "conversation artwork or wash can still cover native message content"
+fi
+grep -q 'noHomeComposerOverlap' "$ROOT/scripts/live-ui-audit.mjs" || \
+  fail "live UI audit does not check home/composer overlap"
+grep -q 'sidebarHit' "$ROOT/scripts/live-ui-audit.mjs" || \
+  fail "live UI audit does not hit-test the themed history column"
+grep -q 'homeModeToggleHit' "$ROOT/scripts/live-ui-audit.mjs" || \
+  fail "live UI audit does not hit-test the Chat/Work mode toggle"
+if grep -q 'dream-main-surface > \*' "$ROOT/styles/dream/style.css"; then
+  fail "theme CSS overrides every main child z-index and can block titlebar controls"
+fi
+grep -q 'const localSurface' "$ROOT/assets/renderer-inject.js" || \
+  fail "composer resolver can still promote a whole-page painted ancestor"
+grep -q 'remainingPercent' "$ROOT/assets/renderer-inject.js" || \
+  fail "usage gauge does not consume Codex remaining quota semantically"
+grep -q 'usageOrb' "$ROOT/scripts/live-ui-audit.mjs" || \
+  fail "live UI audit does not verify the usage orb"
+grep -q 'dream-usage-orb' "$ROOT/assets/renderer-inject.js" || \
+  fail "weekly usage is not rendered as a composer orb"
+grep -q 'dream-usage-orb-fill' "$ROOT/assets/renderer-inject.js" || \
+  fail "weekly usage heart has no liquid fill element"
+grep -q 'removeAttribute("title")' "$ROOT/assets/renderer-inject.js" || \
+  fail "usage heart can still show a duplicate native tooltip"
+grep -q 'setAttribute("role", "progressbar")' "$ROOT/assets/renderer-inject.js" || \
+  fail "usage quota does not expose accessible progress semantics"
+grep -q 'getQueryData(\["rate-limit-status"\])' "$ROOT/assets/renderer-inject.js" || \
+  fail "usage orb does not read Codex rate-limit reset data"
+
 echo "Checking that the public runtime has no bundled fallback themes..."
 if "$NODE_BIN" "$ROOT/scripts/injector.mjs" --themes >"$TMP_ROOT/themes.json" 2>"$TMP_ROOT/themes.error"; then
   fail "public runtime unexpectedly discovered a bundled fallback theme"
@@ -180,6 +231,9 @@ HOME="$TEST_HOME" /bin/bash -c '
   set -euo pipefail
   . "$1/scripts/lib/mac-common.sh"
   [ "$(dream_installed_port)" = "19335" ]
+  [ -f "$HOME/Library/Application Support/CodexAutoSkin/install-state.json" ]
+  [ -f "$HOME/Library/Application Support/CodexAutoSkin/.migrated-from-CodexDreamSkin" ]
+  [ -f "$HOME/Library/Application Support/CodexDreamSkin/install-state.json" ]
   dream_resolve_app ""
   [ "$APP_BUNDLE" = "$2" ]
 ' test "$ROOT" "$FAKE_APP"
@@ -189,7 +243,7 @@ mkdir -p "$TEST_HOME/.codex"
 printf '%s\n' '[desktop]' 'appearanceTheme = "dark"' >"$TEST_HOME/.codex/config.toml"
 HOME="$TEST_HOME" bash "$ROOT/scripts/autoskin-macos.sh" install \
   --no-start --no-auto-recover --port 19337 --app "$FAKE_APP" --node "$NODE_BIN" >/dev/null
-INSTALLED_ROOT="$TEST_HOME/Library/Application Support/CodexDreamSkin"
+INSTALLED_ROOT="$TEST_HOME/Library/Application Support/CodexAutoSkin"
 [ -x "$INSTALLED_ROOT/runtime/scripts/autoskin-macos.sh" ] || fail "unified installer did not create a stable runtime"
 [ -f "$INSTALLED_ROOT/config.before-dream-skin.toml" ] || fail "unified installer did not back up base colors"
 [ ! -e "$TEST_HOME/Library/LaunchAgents/com.codex-autoskin.watcher.plist" ] || fail "--no-auto-recover installed a LaunchAgent"
@@ -218,7 +272,7 @@ for _ in 1 2; do
   HOME="$TEST_HOME" bash "$ROOT/scripts/restore-dream-skin.sh" \
     --uninstall --restore-base-theme --node "$NODE_BIN" >/dev/null
 done
-[ ! -e "$TEST_HOME/Library/Application Support/CodexDreamSkin/runtime" ] || fail "runtime was not removed"
-[ ! -e "$TEST_HOME/Library/Application Support/CodexDreamSkin/install-state.json" ] || fail "install state was not removed"
+[ ! -e "$TEST_HOME/Library/Application Support/CodexAutoSkin/runtime" ] || fail "runtime was not removed"
+[ ! -e "$TEST_HOME/Library/Application Support/CodexAutoSkin/install-state.json" ] || fail "install state was not removed"
 
 echo "All macOS tests passed."

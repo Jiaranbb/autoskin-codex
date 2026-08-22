@@ -26,7 +26,9 @@ injector_healthy() {
   local pid
   [ -f "$STATE_PATH" ] || return 1
   pid="$(dream_read_json_number "$STATE_PATH" injectorPid 2>/dev/null || true)"
-  [ -n "$pid" ] && dream_pid_matches "$pid" "$INJECTOR"
+  [ -n "$pid" ] &&
+    dream_pid_matches "$pid" "$INJECTOR" &&
+    "$NODE_BIN" "$INJECTOR" --verify --port "$PORT" >/dev/null 2>&1
 }
 
 skin_ready() {
@@ -92,6 +94,7 @@ status_skin() {
   local codex="false"
   local theme=""
   local layout=""
+  local adapter=""
   local payload=""
 
   [ -z "$(dream_main_pids)" ] || codex="true"
@@ -103,6 +106,7 @@ status_skin() {
     if [ -n "$payload" ]; then
       theme="$(printf '%s' "$payload" | plutil -extract theme raw -o - - 2>/dev/null || true)"
       layout="$(printf '%s' "$payload" | plutil -extract layout raw -o - - 2>/dev/null || true)"
+      adapter="$(printf '%s' "$payload" | plutil -extract adapter.confidence raw -o - - 2>/dev/null || true)"
     fi
   elif dream_cdp_ready "$PORT"; then
     session="stale"
@@ -112,6 +116,7 @@ status_skin() {
   printf 'codex=%s\n' "$codex"
   printf 'theme=%s\n' "$theme"
   printf 'layout=%s\n' "$layout"
+  printf 'adapter=%s\n' "$adapter"
   printf 'port=%s\n' "$PORT"
 }
 

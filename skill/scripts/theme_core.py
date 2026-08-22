@@ -651,23 +651,23 @@ def compile_generated_css(theme: dict[str, Any], asset_map: dict[str, str]) -> s
     lines.extend(
         [
             f"{scope} #codex-dream-skin-chrome {{ pointer-events: none; }}",
-            f"{scope} aside.app-shell-left-panel {{ color: var(--autoskin-sidebar-text); }}",
+            f"{scope} .dream-sidebar {{ color: var(--autoskin-sidebar-text); }}",
             f"{scope} .dream-new-task {{ transition: transform .16s ease, box-shadow .16s ease; }}",
             f"{scope} .dream-new-task:hover {{ transform: translateY(-2px); box-shadow: 0 8px 18px rgba(18, 117, 136, .18); }}",
-            f"{scope} .composer-surface-chrome {{ box-shadow: var(--autoskin-composer-shadow); }}",
+            f"{scope} .dream-composer-surface {{ box-shadow: var(--autoskin-composer-shadow); }}",
             f"{scope} #codex-dream-skin-chrome .dream-brand .dream-note {{ font-size: 0; }}",
             f"{scope} #codex-dream-skin-chrome .dream-brand .dream-note::after {{ content: ''; display: block; width: 32px; height: 32px; background: var(--autoskin-brand-icon) center / contain no-repeat; }}",
-            f"{scope} aside.app-shell-left-panel button[aria-label^='切换模式']::after,",
-            f"{scope} aside.app-shell-left-panel button[aria-label^='Switch mode']::after {{ content: ''; display: inline-block; flex: 0 0 18px; width: 18px; height: 18px; margin-left: 4px; background: var(--autoskin-brand-icon) center / contain no-repeat; }}",
-            f"{scope} .dream-home .group\\/home-suggestions button {{ border: 0 !important; color: var(--autoskin-card-title) !important; background: var(--autoskin-card-fill) !important; box-shadow: var(--autoskin-card-shadow) !important; -webkit-backdrop-filter: blur(var(--autoskin-card-blur)); backdrop-filter: blur(var(--autoskin-card-blur)); border-radius: var(--autoskin-card-radius) !important; }}",
-            f"{scope} .dream-home .group\\/home-suggestions button::before, {scope} .dream-home .group\\/home-suggestions button::after {{ content: none !important; display: none !important; }}",
-            f"{scope} .dream-home .group\\/home-suggestions button > span:first-child > span:first-child svg {{ display: none !important; }}",
-            f"{scope} .dream-home .group\\/home-suggestions button > span:first-child > span:first-child::after {{ -webkit-mask: none !important; mask: none !important; background: var(--autoskin-card-image) center / contain no-repeat !important; }}",
+            f"{scope} .dream-sidebar button[aria-label^='切换模式']::after,",
+            f"{scope} .dream-sidebar button[aria-label^='Switch mode']::after {{ content: ''; display: inline-block; flex: 0 0 18px; width: 18px; height: 18px; margin-left: 4px; background: var(--autoskin-brand-icon) center / contain no-repeat; }}",
+            f"{scope} .dream-home .dream-suggestions button {{ border: 0 !important; color: var(--autoskin-card-title) !important; background: var(--autoskin-card-fill) !important; box-shadow: var(--autoskin-card-shadow) !important; -webkit-backdrop-filter: blur(var(--autoskin-card-blur)); backdrop-filter: blur(var(--autoskin-card-blur)); border-radius: var(--autoskin-card-radius) !important; }}",
+            f"{scope} .dream-home .dream-suggestions button::before, {scope} .dream-home .dream-suggestions button::after {{ content: none !important; display: none !important; }}",
+            f"{scope} .dream-home .dream-suggestions button > span:first-child > span:first-child svg {{ display: none !important; }}",
+            f"{scope} .dream-home .dream-suggestions button > span:first-child > span:first-child::after {{ -webkit-mask: none !important; mask: none !important; background: var(--autoskin-card-image) center / contain no-repeat !important; }}",
         ]
     )
     for index in range(1, 5):
         lines.append(
-            f"{scope} .dream-home .group\\/home-suggestions [class~='grid'] > :nth-child({index}) button "
+            f"{scope} .dream-home .dream-suggestions [class~='grid'] > :nth-child({index}) button "
             f"{{ --autoskin-card-image: var(--autoskin-card-icon-{index}); }}"
         )
     advanced = theme.get("advanced", {})

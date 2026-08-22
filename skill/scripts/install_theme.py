@@ -27,10 +27,10 @@ def state_root() -> Path:
 
 def default_runtime_root() -> Path:
     if sys.platform == "darwin":
-        return Path.home() / "Library" / "Application Support" / "CodexDreamSkin" / "runtime"
+        return Path.home() / "Library" / "Application Support" / "CodexAutoSkin" / "runtime"
     if os.name == "nt":
-        return Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "CodexDreamSkin" / "runtime"
-    return Path.home() / ".local" / "share" / "codex-dream-skin" / "runtime"
+        return Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "CodexAutoSkin" / "runtime"
+    return Path.home() / ".local" / "share" / "codex-autoskin" / "runtime"
 
 
 def default_private_root(runtime_root: Path) -> Path:
@@ -123,6 +123,22 @@ def update_desktop_scalar(text: str, key: str, value: str) -> str:
     return "".join(lines)
 
 
+def remove_desktop_scalars(text: str, keys: set[str]) -> str:
+    """Remove selected direct keys from [desktop] without touching nested tables."""
+    lines = text.splitlines(keepends=True)
+    output: list[str] = []
+    in_desktop = False
+    patterns = [re.compile(rf"^\s*{re.escape(key)}\s*=") for key in keys]
+    for line in lines:
+        section = re.match(r"^\s*\[([^\]]+)\]\s*$", line)
+        if section:
+            in_desktop = section.group(1).strip() == "desktop"
+        if in_desktop and any(pattern.match(line) for pattern in patterns):
+            continue
+        output.append(line)
+    return "".join(output)
+
+
 def native_theme_block(native: dict[str, Any]) -> str:
     mode = native["appearance"].capitalize()
     key = f"desktop.appearance{mode}ChromeTheme"
@@ -144,15 +160,15 @@ def native_theme_block(native: dict[str, Any]) -> str:
 
 
 def render_native_config(source: str, native: dict[str, Any]) -> str:
+    mode = native["appearance"].capitalize()
+    table = f"desktop.appearance{mode}ChromeTheme"
     names = [
-        "desktop.appearanceLightChromeTheme",
-        "desktop.appearanceLightChromeTheme.fonts",
-        "desktop.appearanceLightChromeTheme.semanticColors",
-        "desktop.appearanceDarkChromeTheme",
-        "desktop.appearanceDarkChromeTheme.fonts",
-        "desktop.appearanceDarkChromeTheme.semanticColors",
+        table,
+        f"{table}.fonts",
+        f"{table}.semanticColors",
     ]
     result = remove_toml_sections(source, names)
+    result = remove_desktop_scalars(result, {f"appearance{mode}ChromeTheme"})
     appearance = native["appearance"]
     result = update_desktop_scalar(result, "appearanceTheme", toml_quote(appearance))
     code_key = f"appearance{appearance.capitalize()}CodeThemeId"
