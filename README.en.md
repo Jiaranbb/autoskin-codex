@@ -2,6 +2,15 @@
 
 **A standalone Codex theme manager—from multi-surface previews to reversible installation.**
 
+## Updates
+
+- **2026-08-23 | Windows ChatGPT skin support:** Added a native Windows system-tray app for installing, applying, switching, recovering, and verifying themes.
+- **2026-08-22 | Remaining usage display:** Added a water-drop progress indicator at the upper-left of the composer; hover it to see the remaining weekly usage percentage and reset time.
+
+  ![Remaining usage display with percentage and reset time on hover](docs/images/usage-remaining-preview.png)
+
+Future feature and compatibility updates will be recorded here.
+
 [中文说明](README.md) · [Preview](#preview) · [Install](#install) ·
 [Support](SUPPORT.md) · [Issues](https://github.com/Jiaranbb/autoskin-codex/issues)
 

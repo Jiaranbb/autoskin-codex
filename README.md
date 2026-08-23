@@ -2,6 +2,15 @@
 
 **独立的 Codex 桌面皮肤管理 App：从主题制作、多界面预览到安全安装与恢复。**
 
+## 更新记录
+
+- **2026-08-23｜Windows 版 ChatGPT 皮肤支持**：新增原生 Windows 系统托盘 App，可安装、应用、切换、恢复和验证主题。
+- **2026-08-22｜用量剩余显示**：输入框左上角新增水滴进度图，悬停可查看每周用量剩余百分比和重置时间。
+
+  ![用量剩余显示：悬停查看剩余百分比和重置时间](docs/images/usage-remaining-preview.png)
+
+后续重要功能与兼容性更新会继续记录在这里。
+
 [![macOS App](https://img.shields.io/badge/macOS-AutoSkin.app-16ABC4)](#30-秒开始)
 [![Windows App](https://img.shields.io/badge/Windows-AutoSkin.exe-16ABC4)](#windows-原生托盘-app)
 [![Optional Skill](https://img.shields.io/badge/Codex-Skill%20adapter-6A8790)](#可选skill-适配层)
