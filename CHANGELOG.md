@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix the fullscreen Chiikawa home layout after Codex 1.2026.273 changed the home DOM into separate scroll, hero, and composer branches.
+- Bump the renderer style version so installed runtimes reload the compatibility CSS after a Codex update.
 - Add a native Windows WinForms tray app with the same Themes / Original Skin / Open Folder / Quit menu as macOS.
 - Render the Windows tray menu with Windows 11 spacing, rounded-corner hints, system light/dark colors,
   Segoe UI Variable, modern hover states, separators, arrows, and accent checkmarks.
