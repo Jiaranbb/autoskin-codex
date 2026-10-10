@@ -11,7 +11,7 @@
   const THEME_STORAGE_KEY = "codex-dream-skin.theme";
   const USAGE_STORAGE_KEY = "codex-dream-skin.usage-percent";
   const USAGE_RESET_STORAGE_KEY = "codex-dream-skin.usage-reset-at";
-  const STYLE_VERSION = "29";
+  const STYLE_VERSION = "30";
   const ADAPTER_VERSION = "semantic-3";
   const LAYOUTS = new Set(["banner", "fullscreen"]);
   // Sidebar "new task" row gets a marker class so the structure CSS can restyle
