@@ -168,6 +168,22 @@ dream_main_pids() {
   done
 }
 
+# Only return the app instance that owns AutoSkin's CDP port. A user may have
+# another ChatGPT/Codex profile open at the same time; restarting that process
+# because it does not expose our port makes the new window visibly flash.
+dream_debug_main_pids() {
+  local port="$1"
+  ps -axo pid=,command= | while read -r pid command; do
+    case "$command" in
+      "$APP_EXECUTABLE"|"$APP_EXECUTABLE "*)
+        case "$command" in
+          *"--remote-debugging-port=$port"*) printf '%s\n' "$pid" ;;
+        esac
+        ;;
+    esac
+  done
+}
+
 dream_process_alive() {
   [ -n "${1:-}" ] && kill -0 "$1" 2>/dev/null
 }

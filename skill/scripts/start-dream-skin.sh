@@ -41,6 +41,7 @@ mkdir -p "$STATE_ROOT"
 rm -f "$PAUSED_PATH"
 INJECTOR_PID=""
 VERIFY_PID=""
+VERIFY_TIMEOUT_MS=12000
 START_SUCCEEDED=0
 
 cleanup_start() {
@@ -140,7 +141,7 @@ INJECTOR_PID=$!
 VERIFIED=0
 for _ in $(seq 1 45); do
   sleep 0.7
-  "$NODE_BIN" "$INJECTOR" --verify --port "$PORT" >/dev/null 2>&1 &
+  "$NODE_BIN" "$INJECTOR" --verify --port "$PORT" --timeout-ms "$VERIFY_TIMEOUT_MS" >/dev/null 2>&1 &
   VERIFY_PID=$!
   if wait "$VERIFY_PID"; then
     VERIFIED=1

@@ -88,7 +88,7 @@ injector_healthy() {
   pid="$(dream_read_json_number "$STATE_PATH" injectorPid 2>/dev/null || true)"
   [ -n "$pid" ] &&
     dream_pid_matches "$pid" "$SCRIPT_DIR/injector.mjs" &&
-    "$NODE_BIN" "$SCRIPT_DIR/injector.mjs" --verify --port "$PORT" >/dev/null 2>&1
+    "$NODE_BIN" "$SCRIPT_DIR/injector.mjs" --verify --port "$PORT" --timeout-ms 5000 >/dev/null 2>&1
 }
 
 run_start() {
@@ -105,6 +105,7 @@ SUSPENDED_UNTIL=0
 MISSED_PROBES=0
 APP_FIRST_SEEN=0
 RESTART_TIMES=""
+UNOWNED_APP_LOGGED=0
 
 while :; do
   NOW="$(date +%s)"
@@ -154,14 +155,20 @@ while :; do
       FAILURE_REASON="injector restart failed"
     fi
   else
-    MAIN_PIDS="$(dream_main_pids)"
+    ALL_MAIN_PIDS="$(dream_main_pids)"
+    MAIN_PIDS="$(dream_debug_main_pids "$PORT")"
     if [ -z "$MAIN_PIDS" ]; then
+      if [ -n "$ALL_MAIN_PIDS" ] && [ "$UNOWNED_APP_LOGGED" -eq 0 ]; then
+        write_log "Found a Codex process without AutoSkin's CDP port; leaving the additional instance untouched."
+        UNOWNED_APP_LOGGED=1
+      fi
       MISSED_PROBES=0
       APP_FIRST_SEEN=0
       IGNORE_EXISTING_APP=0
       sleep "$POLL_SECONDS"
       continue
     fi
+    UNOWNED_APP_LOGGED=0
 
     # A newly installed/login-started LaunchAgent must not kill an app that was
     # already open. Once that app closes (or starts with CDP), normal recovery arms.

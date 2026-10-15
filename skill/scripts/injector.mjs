@@ -12,6 +12,7 @@ const RUNTIME_CSS_ASSETS = [
   "icon-scales.svg",
   "icon-wrench.svg",
 ];
+const CDP_COMMAND_TIMEOUT_MS = 10000;
 
 function parseArgs(argv) {
   const options = { port: 9335, mode: "watch", timeoutMs: 30000, screenshot: null, reload: false };
@@ -46,8 +47,20 @@ class CdpSession {
 
   async open() {
     await new Promise((resolve, reject) => {
-      this.ws.addEventListener("open", resolve, { once: true });
-      this.ws.addEventListener("error", reject, { once: true });
+      let settled = false;
+      let timer;
+      const finish = (callback, value) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        callback(value);
+      };
+      timer = setTimeout(() => {
+        try { this.ws.close(); } catch {}
+        finish(reject, new Error(`CDP socket open timed out after ${CDP_COMMAND_TIMEOUT_MS}ms`));
+      }, CDP_COMMAND_TIMEOUT_MS);
+      this.ws.addEventListener("open", () => finish(resolve), { once: true });
+      this.ws.addEventListener("error", (error) => finish(reject, error), { once: true });
     });
     this.ws.addEventListener("message", (event) => this.onMessage(event));
     this.ws.addEventListener("close", () => {
@@ -83,8 +96,21 @@ class CdpSession {
     if (this.closed) return Promise.reject(new Error("CDP session is closed"));
     return new Promise((resolve, reject) => {
       const id = this.nextId++;
-      this.pending.set(id, { resolve, reject });
-      this.ws.send(JSON.stringify({ id, method, params }));
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        reject(new Error(`CDP command timed out after ${CDP_COMMAND_TIMEOUT_MS}ms: ${method}`));
+      }, CDP_COMMAND_TIMEOUT_MS);
+      this.pending.set(id, {
+        resolve: (value) => { clearTimeout(timer); resolve(value); },
+        reject: (error) => { clearTimeout(timer); reject(error); },
+      });
+      try {
+        this.ws.send(JSON.stringify({ id, method, params }));
+      } catch (error) {
+        this.pending.delete(id);
+        clearTimeout(timer);
+        reject(error);
+      }
     });
   }
 
