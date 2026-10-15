@@ -804,13 +804,19 @@ async function verifySession(session) {
       result.composer.height < result.viewport.height * 0.45 &&
       result.composer.width * result.composer.height <
         result.viewport.width * result.viewport.height * 0.5;
+    // A conversation opened in its own Codex window intentionally has no
+    // history sidebar. Its local composer is still a stronger identity signal
+    // than the sidebar, so do not let the watcher treat that valid window as
+    // a broken injection and restart the injector in a loop.
+    const standaloneConversation = result.surfaceKind === 'conversation' && composerLooksLocal;
     result.pass = result.installed && result.stylePresent && result.chromePresent &&
       Array.isArray(result.themes) && result.themes.length > 0 && result.themes.includes(result.theme) &&
       ['banner', 'fullscreen'].includes(result.layout) &&
       result.adapter?.version && result.adapter.confidence >= 0.65 &&
       !result.legacyControlsPresent &&
       result.chromePointerEvents === 'none' &&
-      (result.surfaceKind === 'utility' || composerLooksLocal) && Boolean(result.sidebar) &&
+      (result.surfaceKind === 'utility' || composerLooksLocal) &&
+      (Boolean(result.sidebar) || standaloneConversation) &&
       (!result.homePresent ||
         (result.homeKind === 'chat' && result.chatCanvas && result.chatCanvas !== 'none') ||
         (result.homeKind === 'work' && Boolean(result.hero) &&

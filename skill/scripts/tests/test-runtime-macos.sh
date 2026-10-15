@@ -54,6 +54,8 @@ grep -q 'adapter.confidence >= 0.65' "$ROOT/scripts/injector.mjs" || \
   fail "renderer verification does not enforce adapter confidence"
 grep -q 'composerLooksLocal' "$ROOT/scripts/injector.mjs" || \
   fail "renderer verification accepts a whole-page composer marker"
+grep -q 'standaloneConversation' "$ROOT/scripts/injector.mjs" || \
+  fail "renderer verification rejects valid standalone conversation windows"
 grep -q 'candidate.classList.remove("dream-composer-surface")' "$ROOT/assets/renderer-inject.js" || \
   fail "semantic adapter does not clear its previous composer paint before rescoring"
 grep -q 'surfaceKind === "utility"' "$ROOT/assets/renderer-inject.js" || \

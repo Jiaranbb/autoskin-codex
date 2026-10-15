@@ -4,6 +4,7 @@
 
 - Prevent the macOS watcher from restarting additional ChatGPT/Codex profiles that do not own AutoSkin's CDP port.
 - Add bounded CDP socket, command, health-check, and startup verification timeouts to prevent stuck restart loops.
+- Accept standalone conversation windows without a history sidebar during health checks, preventing the watcher from restarting the injector and flashing the window.
 - Fix the fullscreen Chiikawa home layout after Codex 1.2026.273 changed the home DOM into separate scroll, hero, and composer branches.
 - Bump the renderer style version so installed runtimes reload the compatibility CSS after a Codex update.
 - Add a native Windows WinForms tray app with the same Themes / Original Skin / Open Folder / Quit menu as macOS.
