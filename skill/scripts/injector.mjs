@@ -32,45 +32,53 @@ function parseArgs(argv) {
   if (!Number.isInteger(options.port) || options.port < 1024 || options.port > 65535) {
     throw new Error(`Invalid port: ${options.port}`);
   }
+  if (!Number.isInteger(options.timeoutMs) || options.timeoutMs <= 0) {
+    throw new Error(`Invalid timeout: ${options.timeoutMs}`);
+  }
   return options;
 }
 
-class CdpSession {
-  constructor(target) {
+export class CdpSession {
+  constructor(target, { timeoutMs = CDP_COMMAND_TIMEOUT_MS } = {}) {
     this.target = target;
     this.ws = new WebSocket(target.webSocketDebuggerUrl);
     this.nextId = 1;
     this.pending = new Map();
     this.listeners = new Map();
     this.closed = false;
+    this.timeoutMs = timeoutMs;
   }
 
   async open() {
-    await new Promise((resolve, reject) => {
-      let settled = false;
-      let timer;
-      const finish = (callback, value) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        callback(value);
-      };
-      timer = setTimeout(() => {
-        try { this.ws.close(); } catch {}
-        finish(reject, new Error(`CDP socket open timed out after ${CDP_COMMAND_TIMEOUT_MS}ms`));
-      }, CDP_COMMAND_TIMEOUT_MS);
-      this.ws.addEventListener("open", () => finish(resolve), { once: true });
-      this.ws.addEventListener("error", (error) => finish(reject, error), { once: true });
-    });
-    this.ws.addEventListener("message", (event) => this.onMessage(event));
-    this.ws.addEventListener("close", () => {
-      this.closed = true;
-      for (const waiter of this.pending.values()) waiter.reject(new Error("CDP socket closed"));
-      this.pending.clear();
-    });
-    await this.send("Runtime.enable");
-    await this.send("Page.enable");
-    return this;
+    try {
+      await new Promise((resolve, reject) => {
+        let settled = false;
+        let timer;
+        const finish = (callback, value) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          callback(value);
+        };
+        timer = setTimeout(() => {
+          finish(reject, new Error(`CDP socket open timed out after ${this.timeoutMs}ms`));
+        }, this.timeoutMs);
+        this.ws.addEventListener("open", () => finish(resolve), { once: true });
+        this.ws.addEventListener("error", (error) => finish(reject, error), { once: true });
+      });
+      this.ws.addEventListener("message", (event) => this.onMessage(event));
+      this.ws.addEventListener("close", () => {
+        this.closed = true;
+        for (const waiter of this.pending.values()) waiter.reject(new Error("CDP socket closed"));
+        this.pending.clear();
+      });
+      await this.send("Runtime.enable");
+      await this.send("Page.enable");
+      return this;
+    } catch (error) {
+      this.close();
+      throw error;
+    }
   }
 
   onMessage(event) {
@@ -98,8 +106,8 @@ class CdpSession {
       const id = this.nextId++;
       const timer = setTimeout(() => {
         this.pending.delete(id);
-        reject(new Error(`CDP command timed out after ${CDP_COMMAND_TIMEOUT_MS}ms: ${method}`));
-      }, CDP_COMMAND_TIMEOUT_MS);
+        reject(new Error(`CDP command timed out after ${this.timeoutMs}ms: ${method}`));
+      }, this.timeoutMs);
       this.pending.set(id, {
         resolve: (value) => { clearTimeout(timer); resolve(value); },
         reject: (error) => { clearTimeout(timer); reject(error); },
@@ -129,8 +137,12 @@ class CdpSession {
   }
 
   close() {
-    if (!this.closed) this.ws.close();
+    if (!this.closed) {
+      try { this.ws.close(); } catch {}
+    }
     this.closed = true;
+    for (const waiter of this.pending.values()) waiter.reject(new Error("CDP session closed"));
+    this.pending.clear();
   }
 }
 
@@ -169,7 +181,9 @@ async function fetchTargets(port) {
   let lastError;
   for (const host of hosts) {
     try {
-      const response = await fetch(`http://${host}:${port}/json/list`);
+      const response = await fetch(`http://${host}:${port}/json/list`, {
+        signal: AbortSignal.timeout(2000),
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const targets = await response.json();
       if (!Array.isArray(targets)) throw new Error("CDP target list is not an array");
@@ -972,18 +986,40 @@ async function runWatch(options) {
     }
 
     for (const target of targets) {
-      if (sessions.has(target.id)) continue;
+      const existing = sessions.get(target.id);
+      if (existing) {
+        if (Date.now() - (existing.lastProbeAt ?? 0) < 5000) continue;
+        existing.lastProbeAt = Date.now();
+        try {
+          // Repair actual injection loss in this window. Geometry/visibility
+          // checks belong to explicit verification, not process restarts.
+          const installed = await existing.evaluate(`Boolean(
+            window.__CODEX_DREAM_SKIN_STATE__ &&
+            document.getElementById('codex-dream-skin-style') &&
+            document.documentElement.classList.contains('codex-dream-skin')
+          )`);
+          if (!installed) await applyToSession(existing, payload);
+        } catch (error) {
+          existing.close();
+          sessions.delete(target.id);
+          console.error(`[dream-skin] target probe failed for ${target.id}: ${error.message}`);
+        }
+        continue;
+      }
+      let session;
       try {
-        const session = await connectTarget(target);
+        session = await connectTarget(target);
         session.on("Page.loadEventFired", () => {
           setTimeout(() => applyToSession(session, payload).catch((error) => {
             console.error(`[dream-skin] reinject failed: ${error.message}`);
           }), 250);
         });
         await applyToSession(session, payload);
+        session.lastProbeAt = Date.now();
         sessions.set(target.id, session);
         console.log(`[dream-skin] injected target ${target.id} (${target.title || target.url})`);
       } catch (error) {
+        session?.close();
         console.error(`[dream-skin] inject failed for ${target.id}: ${error.message}`);
       }
     }
@@ -993,7 +1029,30 @@ async function runWatch(options) {
   for (const session of sessions.values()) session.close();
 }
 
-const options = parseArgs(process.argv.slice(2));
-if (options.mode === "watch") await runWatch(options);
-else if (options.mode === "themes") await runThemesReport();
-else await runOneShot(options);
+// A CDP close handshake can itself stall when a renderer is busy or closing.
+// Bound the entire one-shot process, including discovery and socket teardown,
+// rather than just the individual CDP commands.
+if (process.argv[1] && await fs.realpath(process.argv[1]).catch(() => null) === fileURLToPath(import.meta.url)) {
+  try {
+    const options = parseArgs(process.argv.slice(2));
+    if (options.mode !== "watch") {
+      setTimeout(() => {
+        console.error(`[dream-skin] ${options.mode} exceeded ${options.timeoutMs}ms`);
+        process.exit(1);
+      }, options.timeoutMs).unref();
+    }
+    if (options.mode === "watch") await runWatch(options);
+    else if (options.mode === "themes") await runThemesReport();
+    else await runOneShot(options);
+    // Flush reports before exiting even if a WebSocket's close handshake is
+    // still pending. Watch mode has already closed its sessions at this point.
+    await Promise.all([
+      new Promise((resolve) => process.stdout.write("", resolve)),
+      new Promise((resolve) => process.stderr.write("", resolve)),
+    ]);
+    process.exit(process.exitCode ?? 0);
+  } catch (error) {
+    console.error(`[dream-skin] ${error.message}`);
+    process.exit(1);
+  }
+}

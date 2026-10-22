@@ -83,12 +83,11 @@ trap 'exit 0' INT TERM
 ' "$WATCHER_STATE_PATH" "$$" "$PORT" "$0" "$APP_BUNDLE"
 write_log "Watcher started (PID $$, port $PORT)."
 
-injector_healthy() {
+injector_running() {
   local pid
   pid="$(dream_read_json_number "$STATE_PATH" injectorPid 2>/dev/null || true)"
   [ -n "$pid" ] &&
-    dream_pid_matches "$pid" "$SCRIPT_DIR/injector.mjs" &&
-    "$NODE_BIN" "$SCRIPT_DIR/injector.mjs" --verify --port "$PORT" --timeout-ms 5000 >/dev/null 2>&1
+    dream_pid_matches "$pid" "$SCRIPT_DIR/injector.mjs --watch --port $PORT"
 }
 
 run_start() {
@@ -122,7 +121,10 @@ while :; do
   DEBUG_READY=0
   dream_cdp_ready "$PORT" && DEBUG_READY=1
 
-  if [ "$DEBUG_READY" -eq 1 ] && injector_healthy; then
+  # The injector repairs missing skin state per window. A layout/visibility
+  # verification failure is diagnostic evidence, not a reason to restart an
+  # otherwise running injector and flash every window.
+  if [ "$DEBUG_READY" -eq 1 ] && injector_running; then
     if [ "$CONSECUTIVE_FAILURES" -gt 0 ] || [ "$SUSPENDED_UNTIL" -gt 0 ]; then
       write_log "Dream Skin is healthy again; resuming normal watch."
     fi

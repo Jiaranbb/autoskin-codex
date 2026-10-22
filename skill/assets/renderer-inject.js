@@ -190,15 +190,19 @@
     return { percent: usagePercent, resetAt: usageResetAt };
   };
 
+  const setText = (node, value) => {
+    if (node && node.textContent !== value) node.textContent = value;
+  };
+
   const syncThemeMeta = () => {
     const meta = THEME_META[activeTheme];
     const chrome = document.getElementById(CHROME_ID);
     const brand = chrome?.querySelector(".dream-brand b");
     const edition = chrome?.querySelector(".dream-brand small");
     const signature = chrome?.querySelector(".dream-signature");
-    if (brand) brand.textContent = meta.brand;
-    if (edition) edition.textContent = meta.edition;
-    if (signature) signature.textContent = meta.signature;
+    setText(brand, meta.brand);
+    setText(edition, meta.edition);
+    setText(signature, meta.signature);
     if (!chrome) return;
     // Opt-in stickers (theme.json "stickers"): text goes through textContent
     // only, visibility through marker classes consumed by the structure CSS.
@@ -207,10 +211,10 @@
     chrome.classList.toggle("dream-has-board", Boolean(stickers?.board));
     chrome.classList.toggle("dream-has-corner", Boolean(stickers?.corner));
     const bubbleText = chrome.querySelector(".dream-sticker-bubble > span");
-    if (bubbleText) bubbleText.textContent = stickers?.bubble?.text ?? "";
+    setText(bubbleText, stickers?.bubble?.text ?? "");
     const boardLines = stickers?.board?.lines ?? [];
     chrome.querySelectorAll(".dream-sticker-board > span").forEach((line, index) => {
-      line.textContent = boardLines[index] ?? "";
+      setText(line, boardLines[index] ?? "");
       line.style.display = boardLines[index] ? "" : "none";
     });
   };
@@ -323,7 +327,8 @@
   const syncDecorations = (chrome, surface) => {
     const layer = chrome?.querySelector(".dream-autoskin-decorations");
     if (!layer) return;
-    if (layer.dataset.theme !== activeTheme) {
+    const signature = `${activeTheme}:${JSON.stringify(THEME_DECORATIONS[activeTheme] ?? [])}`;
+    if (layer.dataset.signature !== signature) {
       layer.replaceChildren();
       for (const item of THEME_DECORATIONS[activeTheme] ?? []) {
         const node = document.createElement(item.kind === "image" ? "i" : "span");
@@ -344,6 +349,7 @@
         layer.appendChild(node);
       }
       layer.dataset.theme = activeTheme;
+      layer.dataset.signature = signature;
     }
     layer.querySelectorAll(".dream-autoskin-decoration").forEach((node) => {
       node.hidden = !surface || !(node.dataset.surface === "all" || node.dataset.surface === surface);
@@ -575,7 +581,7 @@
     return { home: winner?.node ?? null, kind: winner ? (winner.workSignal ? "work" : "chat") : null };
   };
 
-  const ensure = () => {
+  const syncSkin = () => {
     if (window.__CODEX_DREAM_SKIN_DISABLED__) return;
     const root = document.documentElement;
     if (!root) return;
@@ -669,7 +675,7 @@
     shellMain.classList.toggle("dream-conversation-shell", surfaceKind === "conversation");
     document.getElementById(LEGACY_CONTROLS_ID)?.remove();
     let chrome = document.getElementById(CHROME_ID);
-    if (!chrome || chrome.parentElement !== document.body || chrome.dataset.dreamInjection !== INJECTION_ID) {
+    if (!chrome || chrome.parentElement !== document.body) {
       chrome?.remove();
       chrome = document.createElement("div");
       chrome.id = CHROME_ID;
@@ -736,6 +742,20 @@
     }
     chrome.classList.toggle("dream-home-shell", Boolean(activeHome));
     chrome.classList.toggle("dream-conversation-shell", surfaceKind === "conversation");
+  };
+
+  // Mutations produced by our own decoration/text updates must not schedule
+  // another pass. Otherwise an idle window continually re-runs the adapter,
+  // which can restart CSS transitions and make the surface visibly flicker.
+  const ensure = () => {
+    observer.disconnect();
+    try {
+      syncSkin();
+    } finally {
+      if (!window.__CODEX_DREAM_SKIN_DISABLED__) {
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+      }
+    }
   };
 
   const cleanup = () => {
@@ -808,12 +828,12 @@
     },
     get usagePercent() { return usagePercent; },
     get usageResetAt() { return usageResetAt; },
-    version: "3.5.5"
+    version: "3.5.6"
   };
   ensure();
   return {
     installed: true,
-    version: "3.5.5",
+    version: "3.5.6",
     layout: activeLayout,
     theme: activeTheme,
     themes: [...THEME_ORDER],

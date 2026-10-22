@@ -37,12 +37,13 @@ STATE_PATH="$STATE_ROOT/state.json"
 PAUSED_PATH="$STATE_ROOT/paused"
 STDOUT_PATH="$STATE_ROOT/injector.log"
 STDERR_PATH="$STATE_ROOT/injector-error.log"
+START_LOCK_DIR="$STATE_ROOT/start.lock"
 mkdir -p "$STATE_ROOT"
-rm -f "$PAUSED_PATH"
 INJECTOR_PID=""
 VERIFY_PID=""
-VERIFY_TIMEOUT_MS=12000
+VERIFY_TIMEOUT_MS=5000
 START_SUCCEEDED=0
+START_LOCK_HELD=0
 
 cleanup_start() {
   if [ -n "$VERIFY_PID" ] && dream_process_alive "$VERIFY_PID"; then
@@ -56,9 +57,52 @@ cleanup_start() {
       [ "$recorded_pid" != "$INJECTOR_PID" ] || rm -f "$STATE_PATH"
     fi
   fi
+  if [ "$START_LOCK_HELD" -eq 1 ] && [ "$(<"$START_LOCK_DIR/pid")" = "$$" ]; then
+    rm -f "$START_LOCK_DIR/pid"
+    rmdir "$START_LOCK_DIR" 2>/dev/null || true
+  fi
 }
 trap cleanup_start EXIT
 trap 'exit 130' INT TERM
+
+# The menu-bar app and LaunchAgent may both notice a newly opened renderer.
+# Serialize their launches, then reuse a running injector instead of replacing
+# it merely because a window is loading or its layout verification is stale.
+for LOCK_ATTEMPT in $(seq 1 150); do
+  if mkdir "$START_LOCK_DIR" 2>/dev/null; then
+    printf '%s\n' "$$" >"$START_LOCK_DIR/pid"
+    START_LOCK_HELD=1
+    break
+  fi
+  LOCK_PID=""
+  [ ! -f "$START_LOCK_DIR/pid" ] || LOCK_PID="$(<"$START_LOCK_DIR/pid")"
+  case "$LOCK_PID" in
+    '')
+      # A launcher killed between mkdir and writing its PID leaves an empty
+      # directory. Give a live owner time to write, then reclaim only if empty.
+      if [ "$LOCK_ATTEMPT" -ge 10 ]; then rmdir "$START_LOCK_DIR" 2>/dev/null || true; fi
+      ;;
+    *[!0-9]*) ;;
+    *)
+      if ! dream_process_alive "$LOCK_PID"; then
+        rm -f "$START_LOCK_DIR/pid"
+        rmdir "$START_LOCK_DIR" 2>/dev/null || true
+      fi
+      ;;
+  esac
+  sleep 0.2
+done
+[ "$START_LOCK_HELD" -eq 1 ] || dream_die "another AutoSkin launch is still in progress"
+rm -f "$PAUSED_PATH"
+
+if [ "$FOREGROUND_INJECTOR" -ne 1 ] && dream_cdp_ready "$PORT"; then
+  RUNNING_PID="$(dream_read_json_number "$STATE_PATH" injectorPid 2>/dev/null || true)"
+  if [ -n "$RUNNING_PID" ] && dream_pid_matches "$RUNNING_PID" "$INJECTOR --watch --port $PORT"; then
+    START_SUCCEEDED=1
+    echo "Codex Dream Skin is already running on port $PORT."
+    exit 0
+  fi
+fi
 
 stop_codex_completely() {
   if [ -n "$APP_BUNDLE_ID" ]; then
@@ -124,6 +168,10 @@ if [ -f "$STATE_PATH" ]; then
 fi
 
 if [ "$FOREGROUND_INJECTOR" -eq 1 ]; then
+  # exec does not run the EXIT trap; release our launch lock first.
+  rm -f "$START_LOCK_DIR/pid"
+  rmdir "$START_LOCK_DIR"
+  START_LOCK_HELD=0
   exec "$NODE_BIN" "$INJECTOR" --watch --port "$PORT"
 fi
 
@@ -139,7 +187,7 @@ INJECTOR_PID=$!
 ' "$STATE_PATH" "$PORT" "$INJECTOR_PID" "$(cd "$SCRIPT_DIR/.." && pwd)" "$PROFILE_PATH" "$APP_BUNDLE"
 
 VERIFIED=0
-for _ in $(seq 1 45); do
+for _ in $(seq 1 3); do
   sleep 0.7
   "$NODE_BIN" "$INJECTOR" --verify --port "$PORT" --timeout-ms "$VERIFY_TIMEOUT_MS" >/dev/null 2>&1 &
   VERIFY_PID=$!
@@ -151,7 +199,13 @@ for _ in $(seq 1 45); do
   VERIFY_PID=""
 done
 if [ "$VERIFIED" -ne 1 ]; then
-  dream_die "Dream Skin launched but verification failed; see $STDERR_PATH"
+  # A valid injector can outlive a temporarily hidden/loading surface or an
+  # unsupported layout. Keep it available for per-window recovery and report
+  # the compatibility failure without starting a destructive retry loop.
+  if dream_pid_matches "$INJECTOR_PID" "$INJECTOR --watch --port $PORT"; then
+    START_SUCCEEDED=1
+  fi
+  dream_die "Dream Skin injector launched but layout verification failed; run autoskin-macos.sh verify for details"
 fi
 START_SUCCEEDED=1
 echo "Codex Dream Skin is active on port $PORT."

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Stop renderer updates from triggering their own MutationObserver; update text only when changed and reuse the decoration layer on reinjection.
+- Serialize macOS launches and reuse a running injector when the menu-bar app and watcher recover simultaneously.
+- Bound the complete one-shot verification process, including stalled discovery and WebSocket teardown; close failed CDP sessions.
+- Recover missing skin state per window without restarting a live injector on layout/visibility verification failures.
+- Update the macOS app to 0.3.27 and add behavioral regression tests for concurrent starts, stalled CDP, idle rendering, and DOM recovery.
 - Prevent the macOS watcher from restarting additional ChatGPT/Codex profiles that do not own AutoSkin's CDP port.
 - Add bounded CDP socket, command, health-check, and startup verification timeouts to prevent stuck restart loops.
 - Accept standalone conversation windows without a history sidebar during health checks, preventing the watcher from restarting the injector and flashing the window.
