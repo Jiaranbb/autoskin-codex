@@ -154,11 +154,99 @@ test("renderer reaches idle and repairs native DOM changes without replacing sta
     await sleep(1200);
     assert.equal(await page.evaluate(() => window.fixtureMutations), 0);
     assert.equal(await page.evaluate(() => window.__CODEX_DREAM_SKIN_STATE__.scheduler.timeout), null);
+    const repaint = await page.evaluate(async () => {
+      const composer = document.querySelector('.dream-composer-surface');
+      const changes = [];
+      const observer = new MutationObserver((records) => {
+        for (const record of records) {
+          if (record.target === composer || record.target === document.documentElement) {
+            changes.push(record.attributeName);
+          }
+        }
+      });
+      observer.observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
+      for (let pass = 0; pass < 4; pass++) window.__CODEX_DREAM_SKIN_STATE__.ensure();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      observer.disconnect();
+      return { mutations: changes.length, sameComposer: composer === document.querySelector('.dream-composer-surface') };
+    });
+    assert.deepEqual(repaint, { mutations: 0, sameComposer: true }, 'refresh must not remove and repaint a stable composer');
     await page.evaluate(payload);
     assert.equal(await page.evaluate(() => document.getElementById("codex-dream-skin-chrome") === window.fixtureChrome), true);
     await page.evaluate(() => window.fixtureChrome.remove());
     await sleep(450);
     assert.equal(await page.evaluate(() => Boolean(document.getElementById("codex-dream-skin-chrome"))), true);
+  } finally {
+    await browser.close();
+  }
+});
+
+test("fullscreen Work layout keeps its composer stable across refresh and replacement", {
+  skip: !process.env.AUTOSKIN_PLAYWRIGHT_MODULE,
+}, async () => {
+  const { chromium } = await import(process.env.AUTOSKIN_PLAYWRIGHT_MODULE);
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage({ viewport: { width: 1400, height: 950 } });
+    await page.setContent(`<style>
+      body{margin:0;display:flex}aside{width:250px;height:950px;flex-shrink:0}
+      main{width:1150px;height:950px}.home-main-content{width:100%;height:100%}
+      .home-main-content>div{height:100%;display:flex;flex-direction:column;justify-content:space-between}
+      [data-feature="game-source"]{font-size:32px;margin-top:100px}
+      .home-suggestions{display:flex;gap:10px}.home-suggestions button{width:150px;height:75px}
+      form{margin:20px auto;width:700px;min-height:100px;border-radius:20px;background:white}
+      [contenteditable]{width:600px;height:50px}
+    </style><aside><nav><button>New task</button><button>A</button><button>B</button></nav></aside>
+    <main><div role="main" class="home-main-content"><div>
+      <div><div><div data-feature="game-source">Work in <button>Fixture</button>?</div>
+      <div class="home-suggestions"><button>One</button><button>Two</button></div></div></div>
+      <div><form><div role="textbox" contenteditable="true"></div></form></div>
+    </div></div></main>`);
+    const manifest = { order: ["fixture"], defaultTheme: "fixture", defaultLayout: "fullscreen",
+      meta: { fixture: { brand: "Fixture", edition: "Test", signature: "Stable" } } };
+    const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==";
+    const css = (await fs.readFile(path.join(scripts, "../styles/dream/style.css"), "utf8"))
+      .replace(/__AUTOSKIN_RUNTIME_ASSET__\/[a-z-]+\.svg/g, png);
+    const payload = (await fs.readFile(path.join(scripts, "../assets/renderer-inject.js"), "utf8"))
+      .replace("__DREAM_CSS_JSON__", JSON.stringify(css))
+      .replace("__DREAM_ART_ASSETS_JSON__", JSON.stringify({ fixture: { home: png, chat: png } }))
+      .replace("__DREAM_MANIFEST_JSON__", JSON.stringify(manifest));
+    await page.evaluate(payload);
+    await sleep(500);
+    const result = await page.evaluate(async () => {
+      const state = window.__CODEX_DREAM_SKIN_STATE__;
+      const composer = document.querySelector('.dream-composer-surface');
+      const snapshot = () => {
+        const rect = composer.getBoundingClientRect();
+        return { surface: state.adapter.signals.surface, rect: [rect.x, rect.y, rect.width, rect.height] };
+      };
+      const before = snapshot();
+      let composerMutations = 0;
+      const observer = new MutationObserver((records) => { composerMutations += records.length; });
+      observer.observe(composer, { attributes: true, attributeFilter: ['class', 'style'] });
+      const samples = [];
+      for (let pass = 0; pass < 8; pass++) {
+        state.ensure();
+        samples.push(snapshot());
+      }
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      observer.disconnect();
+      return { before, samples, composerMutations };
+    });
+    assert.equal(result.before.surface, 'work-home');
+    assert.equal(result.composerMutations, 0);
+    for (const sample of result.samples) assert.deepEqual(sample, result.before);
+    await page.evaluate(() => {
+      const previous = document.querySelector('.dream-composer-surface');
+      const replacement = previous.cloneNode(true);
+      replacement.classList.remove('dream-composer-surface');
+      replacement.querySelector('.dream-usage-orb')?.remove();
+      replacement.dataset.fixtureReplacement = 'true';
+      previous.replaceWith(replacement);
+    });
+    await sleep(500);
+    assert.equal(await page.evaluate(() => document.querySelector('.dream-composer-surface')?.dataset.fixtureReplacement), 'true');
+    assert.equal(await page.evaluate(() => document.querySelectorAll('.dream-composer-surface').length), 1);
   } finally {
     await browser.close();
   }

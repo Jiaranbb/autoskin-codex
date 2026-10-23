@@ -375,7 +375,7 @@
       for (const cls of [...root.classList]) {
         if (cls.startsWith("dream-theme-") && cls !== `dream-theme-${activeTheme}`) root.classList.remove(cls);
       }
-      root.classList.add(`dream-theme-${activeTheme}`);
+      if (!root.classList.contains(`dream-theme-${activeTheme}`)) root.classList.add(`dream-theme-${activeTheme}`);
     }
     const assets = artUrls[activeTheme] || artUrls[DEFAULT_THEME];
     root?.style.setProperty("--dream-home-art", `url("${assets.home}")`);
@@ -412,7 +412,7 @@
     document.querySelectorAll(`.${className}`).forEach((candidate) => {
       if (candidate !== node) candidate.classList.remove(className);
     });
-    node?.classList.add(className);
+    if (node && !node.classList.contains(className)) node.classList.add(className);
     return node;
   };
 
@@ -530,6 +530,17 @@
     const editor = [...scope.querySelectorAll('[role="textbox"][contenteditable="true"], textarea')]
       .find(isVisibleInViewport);
     if (!editor) return null;
+    // A previously validated local surface is already the nearest native
+    // composer for this editor. Keep its paint in place while measuring: its
+    // marker also controls ancestor layout via :has(), so temporarily removing
+    // it changes geometry and can restart native transitions on every refresh.
+    const marked = editor.closest('.dream-composer-surface');
+    if (marked && scope.contains(marked) && isVisibleInViewport(marked)) {
+      const rect = marked.getBoundingClientRect();
+      if (rect.width >= Math.min(240, innerWidth * 0.2) && rect.height >= 36 &&
+          rect.height < innerHeight * 0.45 &&
+          rect.width * rect.height < innerWidth * innerHeight * 0.5) return marked;
+    }
     const form = editor.closest("form");
     let node = editor.parentElement;
     let surface = null;
@@ -585,7 +596,7 @@
     if (window.__CODEX_DREAM_SKIN_DISABLED__) return;
     const root = document.documentElement;
     if (!root) return;
-    root.classList.add("codex-dream-skin");
+    if (!root.classList.contains("codex-dream-skin")) root.classList.add("codex-dream-skin");
     applyLayout(activeLayout, false);
     applyTheme(activeTheme, false);
 
@@ -632,15 +643,9 @@
     for (const candidate of document.querySelectorAll(".dream-home-content")) {
       if (candidate !== homeContent) candidate.classList.remove("dream-home-content");
     }
-    if (workHome) workHome.classList.add("dream-home");
-    if (chatHome) chatHome.classList.add("dream-chat-home");
-    if (homeContent) homeContent.classList.add("dream-home-content");
-
-    // Remove our previous paint before resolving again. Otherwise computed
-    // style would treat the marker's own skin as a native composer signal.
-    document.querySelectorAll(".dream-composer-surface").forEach((candidate) => {
-      candidate.classList.remove("dream-composer-surface");
-    });
+    if (workHome && !workHome.classList.contains("dream-home")) workHome.classList.add("dream-home");
+    if (chatHome && !chatHome.classList.contains("dream-chat-home")) chatHome.classList.add("dream-chat-home");
+    if (homeContent && !homeContent.classList.contains("dream-home-content")) homeContent.classList.add("dream-home-content");
     const composer = findComposerSurface(activeHome || document);
     const resolvedUsage = resolveUsageData(sidePanel);
     if (Number.isFinite(resolvedUsage.percent)) {
@@ -733,7 +738,7 @@
     document.querySelectorAll(".dream-composer-surface").forEach((candidate) => {
       if (candidate !== composer) candidate.classList.remove("dream-composer-surface");
     });
-    composer?.classList.add("dream-composer-surface");
+    if (composer && !composer.classList.contains("dream-composer-surface")) composer.classList.add("dream-composer-surface");
     if (composer) {
       const composerBox = composer.getBoundingClientRect();
       chrome.style.setProperty("--dream-composer-top", `${Math.round(composerBox.top - shellBox.top)}px`);
@@ -828,12 +833,12 @@
     },
     get usagePercent() { return usagePercent; },
     get usageResetAt() { return usageResetAt; },
-    version: "3.5.6"
+    version: "3.5.7"
   };
   ensure();
   return {
     installed: true,
-    version: "3.5.6",
+    version: "3.5.7",
     layout: activeLayout,
     theme: activeTheme,
     themes: [...THEME_ORDER],

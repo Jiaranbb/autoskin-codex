@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Preserve a validated local composer marker during layout measurement instead of removing and repainting it on each refresh; avoid redundant root and semantic-marker class writes.
+- Add regression coverage for zero composer/root class mutations during repeated refreshes and stable fullscreen Work geometry under the real stylesheet, including native composer replacement.
+- Update the macOS app to 0.3.28 (renderer 3.5.7).
 - Stop renderer updates from triggering their own MutationObserver; update text only when changed and reuse the decoration layer on reinjection.
 - Serialize macOS launches and reuse a running injector when the menu-bar app and watcher recover simultaneously.
 - Bound the complete one-shot verification process, including stalled discovery and WebSocket teardown; close failed CDP sessions.
