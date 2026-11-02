@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Keep themed mode-switch icons in the button flow when the native button applies absolute positioning to its pseudo-elements.
 - Stabilize the active Work home hero when the fullscreen layout moves it outside the viewport, preventing repeated layout and composer oscillation.
 - Recover the rendered offscreen Work editor and anchor its native layer inside the updated nested home layout.
 - Preserve a validated local composer marker during layout measurement instead of removing and repainting it on each refresh; avoid redundant root and semantic-marker class writes.

@@ -167,6 +167,19 @@ html.codex-dream-skin .dream-sidebar button[aria-label^="切换模式"]::after {
   color: #f16ab5;
 }
 
+/* Codex now positions its button pseudo-elements absolutely. Theme icons
+   must stay in the button's inline flow instead of overlapping its label. */
+html.codex-dream-skin .dream-sidebar button:is([aria-label^="切换模式"], [aria-label^="Switch mode"]) {
+  display: inline-flex !important;
+  align-items: center !important;
+  width: max-content !important;
+}
+html.codex-dream-skin .dream-sidebar button:is([aria-label^="切换模式"], [aria-label^="Switch mode"])::after {
+  position: static !important;
+  inset: auto !important;
+  vertical-align: middle;
+}
+
 html.codex-dream-skin .dream-sidebar [class~="bg-token-list-hover-background"],
 html.codex-dream-skin .dream-sidebar [aria-current="page"] {
   background: linear-gradient(90deg,
