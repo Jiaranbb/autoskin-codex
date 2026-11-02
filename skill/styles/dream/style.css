@@ -1269,6 +1269,7 @@ html.dream-layout-fullscreen .dream-home .dream-composer-anchor {
   right: 0 !important;
   bottom: 0 !important;
   z-index: 20 !important;
+  pointer-events: auto !important;
 }
 
 html.codex-dream-skin :is(.composer-surface-chrome, .dream-composer-surface) {

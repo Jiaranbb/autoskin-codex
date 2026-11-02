@@ -200,7 +200,7 @@ test("fullscreen Work layout keeps its composer stable across refresh and replac
     <main><div role="main" class="home-main-content"><div>
       <div><div><div data-feature="game-source">Work in <button>Fixture</button>?</div>
       <div class="home-suggestions"><button>One</button><button>Two</button></div></div></div>
-      <div class="relative z-20"><form><div role="textbox" contenteditable="true"></div></form></div>
+      <div class="relative z-20"><form><div role="textbox" contenteditable="true"></div><button type="button" aria-label="Send">Send</button></form></div>
     </div></div></main>`);
     const manifest = { order: ["fixture"], defaultTheme: "fixture", defaultLayout: "fullscreen",
       meta: { fixture: { brand: "Fixture", edition: "Test", signature: "Stable" } } };
@@ -235,6 +235,13 @@ test("fullscreen Work layout keeps its composer stable across refresh and replac
     });
     assert.equal(result.before.surface, 'work-home');
     assert.ok(result.before.rect[1] < 950 && result.before.rect[1] + result.before.rect[3] > 0);
+    const hit = await page.evaluate(() => {
+      const button = document.querySelector('button[aria-label="Send"]');
+      const r = button.getBoundingClientRect();
+      const target = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+      return { pointer: getComputedStyle(button).pointerEvents, hit: target === button || button.contains(target) };
+    });
+    assert.deepEqual(hit, { pointer: 'auto', hit: true }, 'native send button must receive pointer input');
     assert.equal(result.composerMutations, 0);
     for (const sample of result.samples) assert.deepEqual(sample, result.before);
     await page.addStyleTag({ content: '[data-feature="game-source"].dream-hero-source { visibility: hidden !important; }' });
