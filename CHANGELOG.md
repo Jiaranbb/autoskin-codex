@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Stabilize the active Work home hero when the fullscreen layout moves it outside the viewport, preventing repeated layout and composer oscillation.
 - Preserve a validated local composer marker during layout measurement instead of removing and repainting it on each refresh; avoid redundant root and semantic-marker class writes.
 - Add regression coverage for zero composer/root class mutations during repeated refreshes and stable fullscreen Work geometry under the real stylesheet, including native composer replacement.
 - Update the macOS app to 0.3.28 (renderer 3.5.7).

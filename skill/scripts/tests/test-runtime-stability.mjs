@@ -236,6 +236,18 @@ test("fullscreen Work layout keeps its composer stable across refresh and replac
     assert.equal(result.before.surface, 'work-home');
     assert.equal(result.composerMutations, 0);
     for (const sample of result.samples) assert.deepEqual(sample, result.before);
+    await page.addStyleTag({ content: '[data-feature="game-source"].dream-hero-source { visibility: hidden !important; }' });
+    const retained = await page.evaluate(() => {
+      const state = window.__CODEX_DREAM_SKIN_STATE__;
+      const samples = [];
+      for (let pass = 0; pass < 6; pass++) {
+        state.ensure();
+        samples.push({ hero: Boolean(document.querySelector('[data-feature="game-source"].dream-hero-source')),
+          content: Boolean(document.querySelector('.dream-home-content')) });
+      }
+      return samples;
+    });
+    for (const sample of retained) assert.deepEqual(sample, { hero: true, content: true });
     await page.evaluate(() => {
       const previous = document.querySelector('.dream-composer-surface');
       const replacement = previous.cloneNode(true);

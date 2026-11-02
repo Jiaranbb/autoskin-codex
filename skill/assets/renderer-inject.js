@@ -503,7 +503,14 @@
 
   const resolveHero = (home, suggestions) => {
     if (!home) return markSingleton("dream-hero-source", null);
-    const native = [...home.querySelectorAll('[data-feature="game-source"]')].find(isVisibleInViewport);
+    const nativeCandidates = [...home.querySelectorAll('[data-feature="game-source"]')];
+    // Our fullscreen layout can move the hero outside the viewport after it
+    // is marked. Keep the established hero while its home remains active;
+    // clearing it tears down the layout and makes the hero visible again.
+    const native = nativeCandidates.find(isVisibleInViewport) ?? nativeCandidates.find((node) =>
+      node.classList.contains("dream-hero-source") && node.isConnected &&
+      !node.closest("[hidden], [aria-hidden='true'], [inert]")
+    );
     if (native) {
       adapterState.signals.hero = "native-marker";
       return markSingleton("dream-hero-source", native);
