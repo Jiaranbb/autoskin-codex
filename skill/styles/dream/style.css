@@ -1248,6 +1248,16 @@ html.dream-layout-fullscreen .dream-home:has(.dream-home-content [data-feature="
   padding-bottom: 16px !important;
 }
 
+/* Newer Work home nests the hero and editor in one wrapper. Anchor the native
+   editor's own layer instead of relying on separate direct child branches. */
+html.dream-layout-fullscreen .dream-home .dream-composer-anchor {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 20 !important;
+}
+
 html.codex-dream-skin :is(.composer-surface-chrome, .dream-composer-surface) {
   border: 2px solid rgba(228,132,188,.58) !important;
   border-radius: 25px !important;

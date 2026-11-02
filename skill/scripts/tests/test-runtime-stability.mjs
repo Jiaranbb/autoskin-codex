@@ -200,7 +200,7 @@ test("fullscreen Work layout keeps its composer stable across refresh and replac
     <main><div role="main" class="home-main-content"><div>
       <div><div><div data-feature="game-source">Work in <button>Fixture</button>?</div>
       <div class="home-suggestions"><button>One</button><button>Two</button></div></div></div>
-      <div><form><div role="textbox" contenteditable="true"></div></form></div>
+      <div class="relative z-20"><form><div role="textbox" contenteditable="true"></div></form></div>
     </div></div></main>`);
     const manifest = { order: ["fixture"], defaultTheme: "fixture", defaultLayout: "fullscreen",
       meta: { fixture: { brand: "Fixture", edition: "Test", signature: "Stable" } } };
@@ -234,6 +234,7 @@ test("fullscreen Work layout keeps its composer stable across refresh and replac
       return { before, samples, composerMutations };
     });
     assert.equal(result.before.surface, 'work-home');
+    assert.ok(result.before.rect[1] < 950 && result.before.rect[1] + result.before.rect[3] > 0);
     assert.equal(result.composerMutations, 0);
     for (const sample of result.samples) assert.deepEqual(sample, result.before);
     await page.addStyleTag({ content: '[data-feature="game-source"].dream-hero-source { visibility: hidden !important; }' });
@@ -248,6 +249,18 @@ test("fullscreen Work layout keeps its composer stable across refresh and replac
       return samples;
     });
     for (const sample of retained) assert.deepEqual(sample, { hero: true, content: true });
+    await page.addStyleTag({ content: `
+      .home-main-content > div > div:last-child { transform: translateY(1800px); }
+      .home-main-content > div > div:last-child:has(.dream-composer-surface) { transform: none; }
+    ` });
+    const recovered = await page.evaluate(() => {
+      document.querySelector('.dream-composer-surface').classList.remove('dream-composer-surface');
+      window.__CODEX_DREAM_SKIN_STATE__.ensure();
+      const node = document.querySelector('.dream-composer-surface');
+      const rect = node?.getBoundingClientRect();
+      return { marked: Boolean(node), visible: Boolean(rect && rect.top < innerHeight && rect.bottom > 0) };
+    });
+    assert.deepEqual(recovered, { marked: true, visible: true }, 'offscreen home editor must be re-anchored');
     await page.evaluate(() => {
       const previous = document.querySelector('.dream-composer-surface');
       const replacement = previous.cloneNode(true);

@@ -11,7 +11,7 @@
   const THEME_STORAGE_KEY = "codex-dream-skin.theme";
   const USAGE_STORAGE_KEY = "codex-dream-skin.usage-percent";
   const USAGE_RESET_STORAGE_KEY = "codex-dream-skin.usage-reset-at";
-  const STYLE_VERSION = "30";
+  const STYLE_VERSION = "31";
   const ADAPTER_VERSION = "semantic-3";
   const LAYOUTS = new Set(["banner", "fullscreen"]);
   // Sidebar "new task" row gets a marker class so the structure CSS can restyle
@@ -401,6 +401,14 @@
       rect.bottom > 0 && rect.top < innerHeight &&
       rect.right > 0 && rect.left < innerWidth;
   };
+  const isRendered = (node) => {
+    if (!node || !node.isConnected || !node.getClientRects().length ||
+        node.closest("[hidden], [aria-hidden='true'], [inert]")) return false;
+    const style = getComputedStyle(node);
+    const rect = node.getBoundingClientRect();
+    return style.display !== "none" && style.visibility !== "hidden" &&
+      Number(style.opacity) !== 0 && rect.width > 1 && rect.height > 1;
+  };
 
   // GUI class names are implementation details and may change on every Codex
   // release. This adapter scores semantic roles, geometry, visibility, and
@@ -532,17 +540,21 @@
   // semantically, then choose its nearest rounded visual surface. The marker
   // is ours and is removed whenever the active composer changes.
   const findComposerSurface = (scope = document) => {
-    const legacy = [...scope.querySelectorAll(".composer-surface-chrome")].find(isVisibleInViewport);
+    // The active Work home can lay its editor below the viewport until our
+    // composer marker anchors it. Restrict this fallback to that visible home.
+    const allowOffscreen = scope !== document && isVisibleInViewport(scope);
+    const eligible = (node) => isVisibleInViewport(node) || (allowOffscreen && isRendered(node));
+    const legacy = [...scope.querySelectorAll(".composer-surface-chrome")].find(eligible);
     if (legacy) return legacy;
     const editor = [...scope.querySelectorAll('[role="textbox"][contenteditable="true"], textarea')]
-      .find(isVisibleInViewport);
+      .find(eligible);
     if (!editor) return null;
     // A previously validated local surface is already the nearest native
     // composer for this editor. Keep its paint in place while measuring: its
     // marker also controls ancestor layout via :has(), so temporarily removing
     // it changes geometry and can restart native transitions on every refresh.
     const marked = editor.closest('.dream-composer-surface');
-    if (marked && scope.contains(marked) && isVisibleInViewport(marked)) {
+    if (marked && scope.contains(marked) && eligible(marked)) {
       const rect = marked.getBoundingClientRect();
       if (rect.width >= Math.min(240, innerWidth * 0.2) && rect.height >= 36 &&
           rect.height < innerHeight * 0.45 &&
@@ -654,6 +666,8 @@
     if (chatHome && !chatHome.classList.contains("dream-chat-home")) chatHome.classList.add("dream-chat-home");
     if (homeContent && !homeContent.classList.contains("dream-home-content")) homeContent.classList.add("dream-home-content");
     const composer = findComposerSurface(activeHome || document);
+    const anchor = workHome && composer ? composer.closest('[class~="z-20"]') : null;
+    markSingleton("dream-composer-anchor", anchor && workHome.contains(anchor) ? anchor : null);
     const resolvedUsage = resolveUsageData(sidePanel);
     if (Number.isFinite(resolvedUsage.percent)) {
       usagePercent = Math.max(0, Math.min(100, Math.round(resolvedUsage.percent)));
@@ -791,7 +805,7 @@
     document.querySelectorAll(".dream-new-task").forEach((node) => node.classList.remove("dream-new-task"));
     document.querySelectorAll(".dream-composer-surface").forEach((node) => node.classList.remove("dream-composer-surface"));
     document.querySelectorAll(".dream-usage-orb, .dream-usage-gauge").forEach((node) => node.remove());
-    for (const marker of ["dream-sidebar", "dream-main-surface", "dream-suggestions", "dream-hero-source"]) {
+    for (const marker of ["dream-sidebar", "dream-main-surface", "dream-suggestions", "dream-hero-source", "dream-composer-anchor"]) {
       document.querySelectorAll(`.${marker}`).forEach((node) => node.classList.remove(marker));
     }
     document.getElementById(STYLE_ID)?.remove();
